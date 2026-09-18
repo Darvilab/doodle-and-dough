@@ -13,15 +13,110 @@
     />
     <meta name="robots" content="noindex, nofollow" />
     <title>Doodle &amp; Dough — Pizza Your Way</title>
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Doodle &amp; Dough" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Non-blocking so the boot loader paints immediately; main.tsx waits for it before revealing the app -->
     <link
+      id="font-css"
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..900&family=Outfit:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="
+        this.media = 'all';
+        this.dataset.loaded = '1';
+      "
+      onerror="this.dataset.loaded = '1'"
     />
+    <link rel="preload" as="image" href="/background.jpeg" />
+    <style>
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: #241a12;
+        color: #f8f3e8;
+        font:
+          600 15px/1.3 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        letter-spacing: 0.3px;
+        transition: opacity 0.35s ease;
+      }
+
+      #boot.done {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .boot-pizza {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        border: 3px solid #f8f3e8;
+        background:
+          radial-gradient(circle at 34% 36%, #c43428 0 7px, transparent 8px),
+          radial-gradient(circle at 64% 30%, #c43428 0 6px, transparent 7px),
+          radial-gradient(circle at 58% 64%, #c43428 0 7px, transparent 8px),
+          radial-gradient(circle at 32% 66%, #256e42 0 4px, transparent 5px),
+          radial-gradient(circle, #f3c35a 0 27px, #de9b43 28px);
+        animation: boot-spin 1.6s linear infinite;
+      }
+
+      .boot-dots::after {
+        content: '';
+        display: inline-block;
+        width: 1.2em;
+        text-align: left;
+        animation: boot-dots 1.2s steps(4, end) infinite;
+      }
+
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes boot-dots {
+        0% {
+          content: '';
+        }
+        25% {
+          content: '.';
+        }
+        50% {
+          content: '..';
+        }
+        75% {
+          content: '...';
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .boot-pizza,
+        .boot-dots::after {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot" role="status" aria-live="polite">
+      <div class="boot-pizza" aria-hidden="true"></div>
+      <p class="boot-dots">Warming up the oven</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

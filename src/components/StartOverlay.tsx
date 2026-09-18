@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import logoImg from '../assets/logo.png';
 import textLogoImg from '../assets/main-text-logo.png';
 import { SND, vib, getAudioContext } from '../services/audio';
+import { InstallPrompt } from './InstallPrompt';
 
 interface StartOverlayProps {
   visible: boolean;
@@ -353,15 +354,6 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
         </div>
       </div>
 
-      {/* Tagline with Animated Pulsing Heart */}
-      <p className="start-tagline">
-        Fresh ingredients. Bold flavors.
-        <br />
-        <em style={{ color: 'var(--tomato-d)', fontStyle: 'normal', fontWeight: 700 }}>
-          Made with love, delivered with joy! <span className="heart-beat">❤️</span>
-        </em>
-      </p>
-
       {/* Pricing Pill */}
       <div className="pricehint">
         <span>
@@ -401,6 +393,8 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
           </span>
         ))}
       </button>
+
+      <InstallPrompt />
     </div>
   );
 };
