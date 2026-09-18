@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef
+} from 'react';
 import {
   BakeQuality,
   CanPlaceResult,
@@ -18,6 +26,7 @@ import {
 } from '../types/pizza';
 import { CATALOG, TOPSIZE } from '../constants/catalog';
 import { getIsMuted, setMuted, stopRumble } from '../services/audio';
+import { clearDraft, loadDraft, saveDraft } from '../services/persistence';
 
 interface PizzaContextValue {
   state: OrderState;
@@ -81,13 +90,21 @@ const initialState: OrderState = {
 
 const PizzaContext = createContext<PizzaContextValue | null>(null);
 
+// Read once at module load; loadDraft is safe (returns null) when storage is unavailable.
+const initialDraft = loadDraft();
+
 export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<OrderState>(initialState);
+  const [state, setState] = useState<OrderState>(initialDraft ? initialDraft.state : initialState);
   const [muted, setMutedState] = useState<boolean>(getIsMuted());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showOrderModal, setShowOrderModal] = useState<boolean>(false);
-  const [sceneMirror, setSceneMirror] = useState<SceneTopping[]>([]);
+  const [sceneMirror, setSceneMirror] = useState<SceneTopping[]>(initialDraft?.sceneMirror ?? []);
   const toastTimerRef = useRef<number | null>(null);
+
+  // Draft order persists across refreshes; cleared when back at the start screen.
+  useEffect(() => {
+    saveDraft(state, sceneMirror);
+  }, [state, sceneMirror]);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -548,6 +565,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const resetState = useCallback(() => {
     stopRumble();
+    clearDraft();
     setState(initialState);
     setSceneMirror([]);
     setShowOrderModal(false);
