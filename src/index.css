@@ -2122,6 +2122,7 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.8px;

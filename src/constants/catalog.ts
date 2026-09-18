@@ -47,7 +47,7 @@ export const CATALOG: {
       badge: 'Golden & Puffy'
     },
     stuffed: {
-      label: 'Cheese Stuffed',
+      label: 'Cheese Stuffed Crust',
       price: 180,
       rim: 0.28,
       shine: 0.35,

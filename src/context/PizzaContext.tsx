@@ -484,7 +484,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const cr = CATALOG.crusts[state.crustId];
     const out: LineItem[] = [
       [sz.label + ' pizza', sz.price, undefined, undefined, 'base'],
-      [cr.label + ' crust', cr.price, undefined, undefined, 'base']
+      [cr.label, cr.price, undefined, undefined, 'base']
     ];
     if (state.sauceId) {
       out.push([
