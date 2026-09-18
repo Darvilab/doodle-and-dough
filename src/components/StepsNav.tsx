@@ -17,7 +17,10 @@ const STEPS: { stage: Stage; label: string; icon: string }[] = [
 ];
 
 export const StepsNav: React.FC<StepsNavProps> = ({ currentStage, onSelectStage }) => {
-  const currentIndex = Math.max(0, STEPS.findIndex(s => s.stage === currentStage));
+  const currentIndex = Math.max(
+    0,
+    STEPS.findIndex((s) => s.stage === currentStage)
+  );
   const progressPct = (currentIndex / (STEPS.length - 1)) * 100;
 
   const handleClick = (stage: Stage) => {

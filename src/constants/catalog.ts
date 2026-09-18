@@ -23,7 +23,7 @@ export const CATALOG: {
   maxGrams: number;
 } = {
   sizes: {
-    '8': { label: '8” Personal', price: 599, f: 0.80 },
+    '8': { label: '8” Personal', price: 599, f: 0.8 },
     '12': { label: '12” Medium', price: 999, f: 1.0 },
     '15': { label: '15” Large', price: 1399, f: 1.22 },
     '10': { label: '10” Small', price: 799, f: 0.88 },
@@ -92,13 +92,69 @@ export const CATALOG: {
   },
   extraCheesePrice: 100, // Matches client menu add-on: "Extra Cheese Rs. 100"
   toppings: [
-    { id: 'chick', label: 'Grilled Chicken', price: 150, max: 10, g: 15, category: 'nonveg', itemsPerUnit: 3 },
-    { id: 'pep', label: 'Pepperoni', price: 120, max: 12, g: 12, category: 'nonveg', itemsPerUnit: 3 },
-    { id: 'mush', label: 'Mixed Mushrooms', price: 80, max: 10, g: 16, category: 'veg', itemsPerUnit: 3 },
-    { id: 'jalap', label: 'Jalapeños / Chilies', price: 60, max: 10, g: 8, category: 'veg', itemsPerUnit: 4 },
-    { id: 'prosc', label: 'Ham & Salami', price: 120, max: 8, g: 10, category: 'nonveg', itemsPerUnit: 2 },
-    { id: 'onion', label: 'Caramelized Onion', price: 50, max: 10, g: 8, category: 'veg', itemsPerUnit: 4 },
-    { id: 'olive', label: 'Black Olives', price: 50, max: 12, g: 10, category: 'veg', itemsPerUnit: 4 },
+    {
+      id: 'chick',
+      label: 'Grilled Chicken',
+      price: 150,
+      max: 10,
+      g: 15,
+      category: 'nonveg',
+      itemsPerUnit: 3
+    },
+    {
+      id: 'pep',
+      label: 'Pepperoni',
+      price: 120,
+      max: 12,
+      g: 12,
+      category: 'nonveg',
+      itemsPerUnit: 3
+    },
+    {
+      id: 'mush',
+      label: 'Mixed Mushrooms',
+      price: 80,
+      max: 10,
+      g: 16,
+      category: 'veg',
+      itemsPerUnit: 3
+    },
+    {
+      id: 'jalap',
+      label: 'Jalapeños / Chilies',
+      price: 60,
+      max: 10,
+      g: 8,
+      category: 'veg',
+      itemsPerUnit: 4
+    },
+    {
+      id: 'prosc',
+      label: 'Ham & Salami',
+      price: 120,
+      max: 8,
+      g: 10,
+      category: 'nonveg',
+      itemsPerUnit: 2
+    },
+    {
+      id: 'onion',
+      label: 'Caramelized Onion',
+      price: 50,
+      max: 10,
+      g: 8,
+      category: 'veg',
+      itemsPerUnit: 4
+    },
+    {
+      id: 'olive',
+      label: 'Black Olives',
+      price: 50,
+      max: 12,
+      g: 10,
+      category: 'veg',
+      itemsPerUnit: 4
+    },
     { id: 'basil', label: 'Fresh Basil', price: 40, max: 8, g: 3, category: 'veg', itemsPerUnit: 4 }
   ],
   maxVarieties: 5,
@@ -118,8 +174,8 @@ export const TOPSIZE: Record<ToppingId, number> = {
 
 export const CHEESE_C = [
   'rgba(243,203,119,.95)', // Mozzarella
-  'rgba(238,187,87,.95)',  // Yak Cheese
-  'rgba(246,212,137,.95)'  // Kanchan Cheese
+  'rgba(238,187,87,.95)', // Yak Cheese
+  'rgba(246,212,137,.95)' // Kanchan Cheese
 ];
 
 export const CRUST_COLOR_STOPS: [number, string][] = [

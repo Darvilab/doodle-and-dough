@@ -4,11 +4,7 @@ import { CATALOG, fmt } from '../../constants/catalog';
 import { CrustId, SizeId } from '../../types/pizza';
 import { SND, vib } from '../../services/audio';
 
-interface TrayBaseProps {
-  spread: number;
-}
-
-export const TrayBase: React.FC<TrayBaseProps> = ({ spread }) => {
+export const TrayBase: React.FC = () => {
   const { state, setSizeId, setCrustId } = usePizza();
 
   const handleSelectSize = (id: SizeId) => {
@@ -23,9 +19,6 @@ export const TrayBase: React.FC<TrayBaseProps> = ({ spread }) => {
     vib(8);
   };
 
-  const spreadPct = Math.min(100, Math.round(spread * 100));
-  const isReady = spread >= 1;
-
   return (
     <>
       <div className="stage-ribbon">
@@ -35,7 +28,7 @@ export const TrayBase: React.FC<TrayBaseProps> = ({ spread }) => {
       </div>
 
       <div className="seg game-seg" id="segSize">
-        {(['8', '12', '15'] as SizeId[]).map(id => (
+        {(['8', '12', '15'] as SizeId[]).map((id) => (
           <button
             key={id}
             type="button"
@@ -50,7 +43,7 @@ export const TrayBase: React.FC<TrayBaseProps> = ({ spread }) => {
       </div>
 
       <div className="seg game-seg" id="segCrust">
-        {(Object.keys(CATALOG.crusts) as CrustId[]).map(id => (
+        {(Object.keys(CATALOG.crusts) as CrustId[]).map((id) => (
           <button
             key={id}
             type="button"
@@ -70,7 +63,15 @@ export const TrayBase: React.FC<TrayBaseProps> = ({ spread }) => {
         {CATALOG.crusts[state.crustId]?.desc}
       </div>
 
-      <div style={{ textAlign: 'center', fontSize: '10.5px', color: 'var(--basil)', fontWeight: 700, margin: '2px 0 4px' }}>
+      <div
+        style={{
+          textAlign: 'center',
+          fontSize: '10.5px',
+          color: 'var(--basil)',
+          fontWeight: 700,
+          margin: '2px 0 4px'
+        }}
+      >
         🌿 Finished with garlic-infused olive oil
       </div>
     </>

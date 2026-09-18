@@ -28,8 +28,6 @@ export const CanvasGameOverlay: React.FC<CanvasGameOverlayProps> = ({
   liveDoneness,
   onToss
 }) => {
-  if (stage === 'start') return null;
-
   const spreadPct = Math.min(100, Math.round(spread * 100));
   const saucePct = Math.min(100, Math.round((sauceCoverage / SAUCE_NEED) * 100));
   const cheeseNeed = 0.58;
@@ -96,6 +94,8 @@ export const CanvasGameOverlay: React.FC<CanvasGameOverlayProps> = ({
     prevPeakRef.current = isPeakBake;
   }, [isPeakBake, stage]);
 
+  if (stage === 'start') return null;
+
   return (
     <div className="canvas-game-hud">
       {/* ── STAGE 1: DOUGH (CRUST) ── */}
@@ -149,10 +149,7 @@ export const CanvasGameOverlay: React.FC<CanvasGameOverlayProps> = ({
               <span className="dough-hud-icon">🍅</span>
               <span className="dough-hud-title">Swirl Sauce</span>
               <div className="dough-hud-track">
-                <div
-                  className="dough-hud-fill sauce-fill"
-                  style={{ width: `${saucePct}%` }}
-                />
+                <div className="dough-hud-fill sauce-fill" style={{ width: `${saucePct}%` }} />
               </div>
               <b className="dough-hud-pct">{saucePct}%</b>
             </div>
@@ -180,10 +177,7 @@ export const CanvasGameOverlay: React.FC<CanvasGameOverlayProps> = ({
               <span className="dough-hud-icon">🧀</span>
               <span className="dough-hud-title">Sprinkle Cheese</span>
               <div className="dough-hud-track">
-                <div
-                  className="dough-hud-fill cheese-fill"
-                  style={{ width: `${cheesePct}%` }}
-                />
+                <div className="dough-hud-fill cheese-fill" style={{ width: `${cheesePct}%` }} />
               </div>
               <b className="dough-hud-pct">{cheesePct}%</b>
             </div>

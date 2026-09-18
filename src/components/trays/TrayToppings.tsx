@@ -5,12 +5,7 @@ import { ToppingId, Zone } from '../../types/pizza';
 import { SND, vib } from '../../services/audio';
 
 interface TrayToppingsProps {
-  onStartDragTopping?: (
-    id: ToppingId,
-    clientX: number,
-    clientY: number
-  ) => void;
-  onSpawnChip?: (x: number, y: number, charge: number) => void;
+  onStartDragTopping?: (id: ToppingId, clientX: number, clientY: number) => void;
 }
 
 const TOPSVG: Record<ToppingId, React.ReactNode> = {
@@ -92,8 +87,24 @@ const TOPSVG: Record<ToppingId, React.ReactNode> = {
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      <line x1="16" y1="17" x2="21" y2="27" stroke="#7A3615" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="23" y1="17" x2="28" y2="26" stroke="#7A3615" strokeWidth="2.5" strokeLinecap="round" />
+      <line
+        x1="16"
+        y1="17"
+        x2="21"
+        y2="27"
+        stroke="#7A3615"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <line
+        x1="23"
+        y1="17"
+        x2="28"
+        y2="26"
+        stroke="#7A3615"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
       <circle cx="14" cy="24" r="1.4" fill="#3E662D" />
       <circle cx="26" cy="20" r="1.4" fill="#3E662D" />
     </svg>
@@ -124,19 +135,8 @@ const ZONES: [Zone, string][] = [
   ['right', 'Right ½']
 ];
 
-export const TrayToppings: React.FC<TrayToppingsProps> = ({
-  onStartDragTopping,
-  onSpawnChip
-}) => {
-  const {
-    state,
-    setZone,
-    unitsTotal,
-    grams,
-    addOneTopping,
-    removeOneTopping,
-    showToast
-  } = usePizza();
+export const TrayToppings: React.FC<TrayToppingsProps> = ({ onStartDragTopping }) => {
+  const { state, setZone, unitsTotal, grams, removeOneTopping } = usePizza();
 
   const [filter, setFilter] = React.useState<'all' | 'veg' | 'nonveg'>('all');
 
@@ -166,7 +166,7 @@ export const TrayToppings: React.FC<TrayToppingsProps> = ({
   };
 
   const filteredToppings = CATALOG.toppings.filter(
-    t => filter === 'all' || t.category === filter
+    (t) => filter === 'all' || t.category === filter
   );
 
   return (
@@ -194,21 +194,30 @@ export const TrayToppings: React.FC<TrayToppingsProps> = ({
       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
         <button
           type="button"
-          onClick={() => { setFilter('all'); SND.tick(); }}
+          onClick={() => {
+            setFilter('all');
+            SND.tick();
+          }}
           className={`filter-pill ${filter === 'all' ? 'active' : ''}`}
         >
           ⭐ All
         </button>
         <button
           type="button"
-          onClick={() => { setFilter('veg'); SND.tick(); }}
+          onClick={() => {
+            setFilter('veg');
+            SND.tick();
+          }}
           className={`filter-pill filter-veg ${filter === 'veg' ? 'active' : ''}`}
         >
           🥦 Veg
         </button>
         <button
           type="button"
-          onClick={() => { setFilter('nonveg'); SND.tick(); }}
+          onClick={() => {
+            setFilter('nonveg');
+            SND.tick();
+          }}
           className={`filter-pill filter-nonveg ${filter === 'nonveg' ? 'active' : ''}`}
         >
           🍗 Meat
@@ -235,12 +244,12 @@ export const TrayToppings: React.FC<TrayToppingsProps> = ({
       </div>
 
       <div className="cards">
-        {filteredToppings.map(t => {
+        {filteredToppings.map((t) => {
           const n = unitsTotal(t.id);
           const currentZone = state.zone;
           const itemsCount =
             currentZone === 'whole'
-              ? (t.itemsPerUnit || 1)
+              ? t.itemsPerUnit || 1
               : Math.max(1, Math.round((t.itemsPerUnit || 1) / 2));
           const unitPrice = currentZone === 'whole' ? t.price : Math.round(t.price / 2);
 
@@ -249,7 +258,7 @@ export const TrayToppings: React.FC<TrayToppingsProps> = ({
               key={t.id}
               className={`card game-card ${n > 0 ? 'card-selected' : ''}`}
               data-id={t.id}
-              onPointerDown={e => handlePointerDownCard(e, t.id)}
+              onPointerDown={(e) => handlePointerDownCard(e, t.id)}
             >
               <div className="card-icon-wrap">{TOPSVG[t.id]}</div>
               <b>{t.label}</b>
@@ -263,7 +272,7 @@ export const TrayToppings: React.FC<TrayToppingsProps> = ({
                 className="minus"
                 disabled={n === 0}
                 aria-label={`Remove one portion of ${t.label}`}
-                onClick={e => handleRemove(e, t.id)}
+                onClick={(e) => handleRemove(e, t.id)}
               >
                 −
               </button>
@@ -272,7 +281,9 @@ export const TrayToppings: React.FC<TrayToppingsProps> = ({
         })}
       </div>
 
-      <div className="hint">Tap card to drop on pizza · Drag to place · ½ zone bills half price</div>
+      <div className="hint">
+        Tap card to drop on pizza · Drag to place · ½ zone bills half price
+      </div>
     </>
   );
 };

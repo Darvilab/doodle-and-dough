@@ -18,41 +18,71 @@ interface ModalConfetti {
   cr: string;
 }
 
+const CONFETTI_COLORS = ['#C43428', '#E7AF40', '#256E42', '#DE9B43', '#FFFFFF', '#33241A'];
+const CONFETTI_EMOJIS = ['🍕', '⭐', '✨', '🎉', '🌿'];
+
+function makeConfettiBurst(): ModalConfetti[] {
+  const burst: ModalConfetti[] = [];
+  for (let i = 0; i < 32; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 80 + Math.random() * 140;
+    const isEmoji = i % 4 === 0;
+    burst.push({
+      id: i,
+      char: isEmoji
+        ? CONFETTI_EMOJIS[Math.floor(Math.random() * CONFETTI_EMOJIS.length)]
+        : undefined,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      size: isEmoji ? 20 : 6 + Math.random() * 6,
+      cx: `${Math.cos(angle) * dist}px`,
+      cy: `${Math.sin(angle) * dist - 30}px`,
+      cr: `${(Math.random() - 0.5) * 720}deg`
+    });
+  }
+  return burst;
+}
+
+/** Confetti particles are generated once per mount so opening the modal replays the burst. */
+const ConfettiBurst: React.FC = () => {
+  const [confetti] = useState(makeConfettiBurst);
+  return (
+    <>
+      {confetti.map((c) => (
+        <span
+          key={c.id}
+          className="start-confetti"
+          style={
+            {
+              '--cx': c.cx,
+              '--cy': c.cy,
+              '--cr': c.cr,
+              width: c.char ? 'auto' : `${c.size}px`,
+              height: c.char ? 'auto' : `${c.size}px`,
+              backgroundColor: c.char ? 'transparent' : c.color,
+              borderRadius: c.char ? '0' : '50%',
+              fontSize: c.char ? `${c.size}px` : 'inherit',
+              left: '50%',
+              top: '25%'
+            } as React.CSSProperties
+          }
+        >
+          {c.char}
+        </span>
+      ))}
+    </>
+  );
+};
+
 export const OrderModal: React.FC<OrderModalProps> = ({
   visible,
   blueprint,
   onBuildAnother,
   onClose
 }) => {
-  const [confetti, setConfetti] = useState<ModalConfetti[]>([]);
-
   useEffect(() => {
     if (visible) {
       SND.win();
       vib([20, 60, 20, 60, 40]);
-
-      // Generate victory confetti burst
-      const colors = ['#C43428', '#E7AF40', '#256E42', '#DE9B43', '#FFFFFF', '#33241A'];
-      const emojis = ['🍕', '⭐', '✨', '🎉', '🌿'];
-      const burst: ModalConfetti[] = [];
-
-      for (let i = 0; i < 32; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 80 + Math.random() * 140;
-        const isEmoji = i % 4 === 0;
-        burst.push({
-          id: i,
-          char: isEmoji ? emojis[Math.floor(Math.random() * emojis.length)] : undefined,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          size: isEmoji ? 20 : 6 + Math.random() * 6,
-          cx: `${Math.cos(angle) * dist}px`,
-          cy: `${Math.sin(angle) * dist - 30}px`,
-          cr: `${(Math.random() - 0.5) * 720}deg`
-        });
-      }
-      setConfetti(burst);
-    } else {
-      setConfetti([]);
     }
   }, [visible]);
 
@@ -110,26 +140,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         )}
 
         {/* Confetti Explosion */}
-        {confetti.map(c => (
-          <span
-            key={c.id}
-            className="start-confetti"
-            style={{
-              '--cx': c.cx,
-              '--cy': c.cy,
-              '--cr': c.cr,
-              width: c.char ? 'auto' : `${c.size}px`,
-              height: c.char ? 'auto' : `${c.size}px`,
-              backgroundColor: c.char ? 'transparent' : c.color,
-              borderRadius: c.char ? '0' : '50%',
-              fontSize: c.char ? `${c.size}px` : 'inherit',
-              left: '50%',
-              top: '25%'
-            } as React.CSSProperties}
-          >
-            {c.char}
-          </span>
-        ))}
+        {visible && <ConfettiBurst />}
 
         <div className="okic game-okic">
           <svg
@@ -145,7 +156,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         </div>
         <h3 className="order-title">Order Sent to Doodle &amp; Dough Kitchen! 🍕🎉</h3>
         <p>
-          Thank you for crafting with us! Your pizza has been queued for authentic wood-fired baking.
+          Thank you for crafting with us! Your pizza has been queued for authentic wood-fired
+          baking.
         </p>
         <div style={{ fontSize: '11px', color: 'var(--ink2)', fontWeight: 600 }}>
           📞 98XXXXXXXX · 📷 @doodle.and.dough · 🛵 Pathao Food · Foodmandu · Bhoj

@@ -31,12 +31,7 @@ export const TraySauce: React.FC<TraySauceProps> = ({ sauceCoverage }) => {
       <div className="tray-top game-tray-top">
         <div className="tray-ic ladle-bob">
           <svg viewBox="0 0 24 24">
-            <path
-              d="M15 4 L20 9"
-              stroke="#8A6B45"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
+            <path d="M15 4 L20 9" stroke="#8A6B45" strokeWidth="2.5" strokeLinecap="round" />
             <circle cx="11" cy="14" r="6.5" fill="#B9BFC7" stroke="#33241A" strokeWidth="1.8" />
             <circle cx="11" cy="14" r="4" fill="#C7402D" />
           </svg>
@@ -48,7 +43,7 @@ export const TraySauce: React.FC<TraySauceProps> = ({ sauceCoverage }) => {
       </div>
 
       <div className="seg game-seg" id="segSauce">
-        {(Object.keys(CATALOG.sauces) as SauceId[]).map(id => (
+        {(Object.keys(CATALOG.sauces) as SauceId[]).map((id) => (
           <button
             key={id}
             type="button"
@@ -57,7 +52,15 @@ export const TraySauce: React.FC<TraySauceProps> = ({ sauceCoverage }) => {
           >
             <span className="seg-label">
               <i className="dotc" style={{ background: CATALOG.sauces[id].color }} />
-              {id === 'bechamel' ? 'Béchamel' : id === 'classic' ? 'Tomato' : id === 'pesto' ? 'Pesto' : id === 'bbq' ? 'BBQ' : 'Spicy'}
+              {id === 'bechamel'
+                ? 'Béchamel'
+                : id === 'classic'
+                  ? 'Tomato'
+                  : id === 'pesto'
+                    ? 'Pesto'
+                    : id === 'bbq'
+                      ? 'BBQ'
+                      : 'Spicy'}
             </span>
             <small>
               {CATALOG.sauces[id].price ? `+${fmt(CATALOG.sauces[id].price)}` : 'included'}

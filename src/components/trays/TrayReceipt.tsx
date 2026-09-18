@@ -24,15 +24,8 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
   cheeseCoverage,
   doneness
 }) => {
-  const {
-    state,
-    setStage,
-    lines,
-    subtotal,
-    addOneTopping,
-    removeOneTopping,
-    showToast
-  } = usePizza();
+  const { state, setStage, lines, subtotal, addOneTopping, removeOneTopping, showToast } =
+    usePizza();
 
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -48,8 +41,8 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
     state.bakeQ === 'Perfect'
       ? 'var(--basil)'
       : state.bakeQ === 'Charred' || state.bakeQ === 'Underbaked'
-      ? 'var(--tomato-d)'
-      : 'var(--ink2)';
+        ? 'var(--tomato-d)'
+        : 'var(--ink2)';
 
   const handlePlus = (id: ToppingId) => {
     const res = addOneTopping(id);
@@ -89,7 +82,7 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
         <div
           className="score-sidecar-bar"
           onClick={() => {
-            setShowBreakdown(prev => !prev);
+            setShowBreakdown((prev) => !prev);
             SND.tick();
             vib(6);
           }}
@@ -98,7 +91,7 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              setShowBreakdown(prev => !prev);
+              setShowBreakdown((prev) => !prev);
               SND.tick();
               vib(6);
             }
@@ -123,7 +116,7 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
               className="score-breakdown-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowBreakdown(prev => !prev);
+                setShowBreakdown((prev) => !prev);
                 SND.tick();
                 vib(6);
               }}
@@ -154,7 +147,9 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
                 </div>
               ))}
             </div>
-            <p className="score-sidecar-reassure">⭐ Freshly wood-fired and handcrafted to perfection 🍕</p>
+            <p className="score-sidecar-reassure">
+              ⭐ Freshly wood-fired and handcrafted to perfection 🍕
+            </p>
           </div>
         )}
       </div>
@@ -233,8 +228,8 @@ export const TrayReceipt: React.FC<TrayReceiptProps> = ({
       </div>
 
       <small className="rnote">
-        Taxes &amp; delivery calculated at checkout. The server reprices this blueprint
-        against live POS stock. Thank you for choosing Doodle &amp; Dough! ❤️
+        Taxes &amp; delivery calculated at checkout. The server reprices this blueprint against live
+        POS stock. Thank you for choosing Doodle &amp; Dough! ❤️
       </small>
     </div>
   );

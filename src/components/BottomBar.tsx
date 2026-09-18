@@ -98,7 +98,9 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     'game-cta-btn',
     ctaEnabled ? 'ready-pulse' : '',
     isUrgentBake ? 'urgent-flame' : ''
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div id="bottombar" className={visible ? 'show' : ''}>
@@ -108,12 +110,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
           {fmt(currentTotal)}
         </b>
       </div>
-      <button
-        className={btnClasses}
-        id="ctaBtn"
-        disabled={!ctaEnabled}
-        onClick={onCtaClick}
-      >
+      <button className={btnClasses} id="ctaBtn" disabled={!ctaEnabled} onClick={onCtaClick}>
         <span className="cta-content">{ctaText}</span>
         {ctaEnabled && <span className="cta-sheen" />}
       </button>

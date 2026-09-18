@@ -3,7 +3,6 @@ import { usePizza } from './context/PizzaContext';
 import { usePizzaEngine } from './hooks/usePizzaEngine';
 import { Header } from './components/Header';
 import { StepsNav } from './components/StepsNav';
-import { StageCanvas } from './components/StageCanvas';
 import { BottomBar } from './components/BottomBar';
 import { OrderModal } from './components/OrderModal';
 import { TrayBase } from './components/trays/TrayBase';
@@ -40,11 +39,11 @@ export const App: React.FC = () => {
 
   const spawnChip = useCallback((x: number, y: number, cents: number) => {
     const id = Date.now() + Math.random();
-    setChips(prev => [...prev, { id, x, y: y - 20, text: `+${fmt(cents)}` }]);
+    setChips((prev) => [...prev, { id, x, y: y - 20, text: `+${fmt(cents)}` }]);
   }, []);
 
   const handleChipAnimationEnd = useCallback((id: number) => {
-    setChips(prev => prev.filter(c => c.id !== id));
+    setChips((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
   // Initialize canvas engine
@@ -268,7 +267,7 @@ export const App: React.FC = () => {
       />
 
       <div id="tray">
-        {state.stage === 'base' && <TrayBase spread={engine.spread} />}
+        {state.stage === 'base' && <TrayBase />}
         {state.stage === 'sauce' && <TraySauce sauceCoverage={engine.sauceCoverage} />}
         {state.stage === 'cheese' && (
           <TrayCheese
@@ -277,12 +276,7 @@ export const App: React.FC = () => {
             onClearCheese={engine.clearCheese}
           />
         )}
-        {state.stage === 'top' && (
-          <TrayToppings
-            onStartDragTopping={handleStartDragTopping}
-            onSpawnChip={spawnChip}
-          />
-        )}
+        {state.stage === 'top' && <TrayToppings onStartDragTopping={handleStartDragTopping} />}
         {state.stage === 'bake' && <TrayBake doneness={engine.liveDoneness} />}
         {state.stage === 'review' && (
           <TrayReceipt

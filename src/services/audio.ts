@@ -9,7 +9,9 @@ let lastSquelchTime = 0;
 
 export function getAudioContext(): AudioContext {
   if (!audioCtx) {
-    const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioCtxClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     audioCtx = new AudioCtxClass();
     masterGain = audioCtx.createGain();
     masterGain.gain.value = isMuted ? 0 : 0.5;

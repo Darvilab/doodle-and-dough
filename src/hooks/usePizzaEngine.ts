@@ -37,7 +37,11 @@ function mixHex(h1: string, h2: string, t: number): string {
   return (
     '#' +
     [0, 1, 2]
-      .map(i => Math.round(lerp(a[i], b[i], t)).toString(16).padStart(2, '0'))
+      .map((i) =>
+        Math.round(lerp(a[i], b[i], t))
+          .toString(16)
+          .padStart(2, '0')
+      )
       .join('')
   );
 }
@@ -69,8 +73,6 @@ const doughBump = (a: number) =>
   Math.sin(a * 7 + 3.3) * 0.14 +
   Math.sin(a * 11 - 1.7) * 0.08;
 
-const bump = doughBump;
-
 const organicR = (a: number, baseR: number, wobble: number = 0.048) => {
   return baseR * (1 + wobble * doughBump(a));
 };
@@ -101,8 +103,7 @@ function crustColor(d: number): string {
   for (let i = 1; i < CRUST_COLOR_STOPS.length; i++) {
     if (d <= CRUST_COLOR_STOPS[i][0]) {
       const t =
-        (d - CRUST_COLOR_STOPS[i - 1][0]) /
-        (CRUST_COLOR_STOPS[i][0] - CRUST_COLOR_STOPS[i - 1][0]);
+        (d - CRUST_COLOR_STOPS[i - 1][0]) / (CRUST_COLOR_STOPS[i][0] - CRUST_COLOR_STOPS[i - 1][0]);
       return mixHex(CRUST_COLOR_STOPS[i - 1][1], CRUST_COLOR_STOPS[i][1], t);
     }
   }
@@ -212,7 +213,12 @@ for (let i = 0; i < 8; i++) {
 export interface UsePizzaEngineOptions {
   state: OrderState;
   sceneMirror?: SceneTopping[];
-  onCommitTopping: (id: ToppingId, zone: 'whole' | 'left' | 'right', x: number, y: number) => number;
+  onCommitTopping: (
+    id: ToppingId,
+    zone: 'whole' | 'left' | 'right',
+    x: number,
+    y: number
+  ) => number;
   onCanPlace: (id: ToppingId) => { ok: boolean; reason?: string };
   onShowToast: (msg: string) => void;
   onAdvanceStage: (nextStage: OrderState['stage']) => void;
@@ -342,11 +348,6 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
 
   const innerFrac = () => {
     return 1 - CATALOG.crusts[optionsRef.current.state.crustId].rim;
-  };
-
-  const cheeseNeed = () => {
-    const units = optionsRef.current.state.cheeseUnits || 1;
-    return Math.min(0.88, 0.58 + (units - 1) * 0.035);
   };
 
   const markCells = (set: Set<string>, x: number, y: number, r: number) => {
@@ -528,7 +529,14 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.save();
       blobPath(g, eng.cx, eng.cy, 1, 0, TAU);
       g.clip();
-      const panGrad = g.createRadialGradient(eng.cx, eng.cy, eng.R * inn * 0.95, eng.cx, eng.cy, eng.R);
+      const panGrad = g.createRadialGradient(
+        eng.cx,
+        eng.cy,
+        eng.R * inn * 0.95,
+        eng.cx,
+        eng.cy,
+        eng.R
+      );
       panGrad.addColorStop(0, 'rgba(120, 60, 20, 0.35)');
       panGrad.addColorStop(0.45, 'rgba(215, 140, 50, 0.38)');
       panGrad.addColorStop(0.85, 'rgba(180, 95, 30, 0.55)');
@@ -578,8 +586,8 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       crustType === 'stuffed'
         ? 'rgba(50,22,8,0.45)'
         : crustType === 'pan'
-        ? 'rgba(65,30,12,0.38)'
-        : 'rgba(70,40,15,0.2)';
+          ? 'rgba(65,30,12,0.38)'
+          : 'rgba(70,40,15,0.2)';
     g.lineWidth = crustType === 'stuffed' ? eng.R * 0.038 : eng.R * 0.026;
     g.stroke();
 
@@ -663,10 +671,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       const sy = y + s.py * bh;
       g.beginPath();
       g.moveTo(sx, sy);
-      g.lineTo(
-        sx + Math.cos(s.ang) * s.len * bw * 0.4,
-        sy + Math.sin(s.ang) * s.len * bw * 0.4
-      );
+      g.lineTo(sx + Math.cos(s.ang) * s.len * bw * 0.4, sy + Math.sin(s.ang) * s.len * bw * 0.4);
       g.stroke();
     }
 
@@ -1213,7 +1218,11 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
         g.fill();
       }
       if (d > 0.3) {
-        const bakeIntensity = (0.12 * Math.min(1, (d - 0.3) / 0.3) * (1 + (units - 1) * 0.06)).toFixed(3);
+        const bakeIntensity = (
+          0.12 *
+          Math.min(1, (d - 0.3) / 0.3) *
+          (1 + (units - 1) * 0.06)
+        ).toFixed(3);
         g.fillStyle = `rgba(255,240,190,${bakeIntensity})`;
         drawOrganicPath(g, px, py, eng.R * inn * 0.97, 0.042);
         g.fill();
@@ -1260,7 +1269,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     cy: number,
     a: number,
     rMax: number,
-    wobble: number = 0.048,
+    _wobble: number = 0.048,
     reverse: boolean = false
   ) => {
     const steps = 14;
@@ -1528,8 +1537,8 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
           y: py + heroDy + Math.sin(hero.a0) * (eng.R * 0.24)
         },
         p2: {
-          x: px + Math.cos(hero.a0) * (eng.R * 0.20),
-          y: py + Math.sin(hero.a0) * (eng.R * 0.20)
+          x: px + Math.cos(hero.a0) * (eng.R * 0.2),
+          y: py + Math.sin(hero.a0) * (eng.R * 0.2)
         },
         sagX: 3,
         sagY: 4,
@@ -1564,8 +1573,8 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
           y: py + heroDy + Math.sin(hero.a1) * (eng.R * 0.24)
         },
         p2: {
-          x: px + Math.cos(hero.a1) * (eng.R * 0.20),
-          y: py + Math.sin(hero.a1) * (eng.R * 0.20)
+          x: px + Math.cos(hero.a1) * (eng.R * 0.2),
+          y: py + Math.sin(hero.a1) * (eng.R * 0.2)
         },
         sagX: -3,
         sagY: 4,
@@ -1656,13 +1665,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     for (const g of garnishes) {
       ctx.fillStyle = g.c;
       ctx.beginPath();
-      ctx.arc(
-        px + Math.cos(g.a) * eng.R * g.d,
-        py + Math.sin(g.a) * eng.R * g.d,
-        g.r,
-        0,
-        TAU
-      );
+      ctx.arc(px + Math.cos(g.a) * eng.R * g.d, py + Math.sin(g.a) * eng.R * g.d, g.r, 0, TAU);
       ctx.fill();
     }
     ctx.restore();
@@ -1691,7 +1694,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
   const drawDoughStage = (ctx: CanvasRenderingContext2D) => {
     const eng = engineRef.current;
     const rb = lerp(eng.R * 0.38, eng.R * 0.98, easeOutQuad(eng.spread));
-    let x = eng.cx;
+    const x = eng.cx;
     let y = eng.cy + Math.sin(eng.time * 2.2) * 2;
     let rot = 0;
     let sx = 1;
@@ -1765,8 +1768,10 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
 
     // Distinct visual crust rim representation for Thin, Pan, and Cheese Stuffed
     const crustType = optionsRef.current.state.crustId;
-    const rimWidth = crustType === 'stuffed' ? rb * 0.22 : crustType === 'pan' ? rb * 0.16 : rb * 0.08;
-    const rimColor = crustType === 'stuffed' ? '#E5C07B' : crustType === 'pan' ? '#D6A665' : '#CFAC79';
+    const rimWidth =
+      crustType === 'stuffed' ? rb * 0.22 : crustType === 'pan' ? rb * 0.16 : rb * 0.08;
+    const rimColor =
+      crustType === 'stuffed' ? '#E5C07B' : crustType === 'pan' ? '#D6A665' : '#CFAC79';
 
     if (crustType === 'stuffed') {
       // 1. Stuffed Crust: Plump continuous hand-rolled cornicione with flour dusting (NO beads!)
@@ -1991,7 +1996,12 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
         ctx.beginPath();
         ctx.moveTo(bx - bw * 0.5, hearthY);
         ctx.quadraticCurveTo(bx - bw * 0.3 + sway * 0.4, hearthY - h * 0.55, tipX, tipY);
-        ctx.quadraticCurveTo(bx + bw * 0.3 + sway * 0.4, hearthY - h * 0.55, bx + bw * 0.5, hearthY);
+        ctx.quadraticCurveTo(
+          bx + bw * 0.3 + sway * 0.4,
+          hearthY - h * 0.55,
+          bx + bw * 0.5,
+          hearthY
+        );
         ctx.closePath();
         ctx.fillStyle = fg;
         ctx.fill();
@@ -2022,7 +2032,12 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
         ctx.beginPath();
         ctx.moveTo(bx - bw * 0.5, hearthY);
         ctx.quadraticCurveTo(bx - bw * 0.25 + sway * 0.35, hearthY - h * 0.5, tipX, tipY);
-        ctx.quadraticCurveTo(bx + bw * 0.25 + sway * 0.35, hearthY - h * 0.5, bx + bw * 0.5, hearthY);
+        ctx.quadraticCurveTo(
+          bx + bw * 0.25 + sway * 0.35,
+          hearthY - h * 0.5,
+          bx + bw * 0.5,
+          hearthY
+        );
         ctx.closePath();
         ctx.fillStyle = fg;
         ctx.fill();
@@ -2053,7 +2068,12 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
         ctx.beginPath();
         ctx.moveTo(bx - bw * 0.5, hearthY);
         ctx.quadraticCurveTo(bx - bw * 0.2 + sway * 0.3, hearthY - h * 0.45, tipX, tipY);
-        ctx.quadraticCurveTo(bx + bw * 0.2 + sway * 0.3, hearthY - h * 0.45, bx + bw * 0.5, hearthY);
+        ctx.quadraticCurveTo(
+          bx + bw * 0.2 + sway * 0.3,
+          hearthY - h * 0.45,
+          bx + bw * 0.5,
+          hearthY
+        );
         ctx.closePath();
         ctx.fillStyle = fg;
         ctx.fill();
@@ -2264,12 +2284,12 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     return d < 0.55
       ? 'Underbaked'
       : d < 0.72
-      ? 'Pale'
-      : d <= 0.86
-      ? 'Perfect'
-      : d <= 1.02
-      ? 'Well done'
-      : 'Charred';
+        ? 'Pale'
+        : d <= 0.86
+          ? 'Perfect'
+          : d <= 1.02
+            ? 'Well done'
+            : 'Charred';
   };
 
   const pullOut = useCallback(() => {
@@ -2364,7 +2384,6 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
 
   const blanketCheese = useCallback(() => {
     const eng = engineRef.current;
-    const inn = innerFrac();
     const units = optionsRef.current.state.cheeseUnits || 1;
     const cheeseType = optionsRef.current.state.cheeseId;
     const colors = CATALOG.cheeses[cheeseType]?.colors || CHEESE_C;
@@ -2610,8 +2629,20 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       eng.cx = eng.W / 2;
       eng.cy = eng.H * 0.42;
 
-      const { sauceC, cheeseC, boardC, baseC, ovenC, reviewC, sauceX, cheeseX, boardX, baseX, ovenX, reviewX } =
-        offscreenRef.current;
+      const {
+        sauceC,
+        cheeseC,
+        boardC,
+        baseC,
+        ovenC,
+        reviewC,
+        sauceX,
+        cheeseX,
+        boardX,
+        baseX,
+        ovenX,
+        reviewX
+      } = offscreenRef.current;
 
       for (const c of [sauceC, cheeseC, boardC, baseC, ovenC, reviewC]) {
         c.width = canvas.width;
@@ -2780,7 +2811,8 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
         d.y += d.vy * dt;
         d.rot += d.vr * dt;
         if (d.y >= d.ty) {
-          if (eng.cheese.length < 10000) { // 10x capacity limit!
+          if (eng.cheese.length < 10000) {
+            // 10x capacity limit!
             const blob = { x: d.lx, y: d.ly, r: d.r, c: d.c };
             eng.cheese.push(blob);
             markCells(cheeseCellsRef.current, d.lx, d.ly, d.r + 0.02);

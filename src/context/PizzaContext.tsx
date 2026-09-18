@@ -17,7 +17,7 @@ import {
   ZoneCount
 } from '../types/pizza';
 import { CATALOG, TOPSIZE } from '../constants/catalog';
-import { getIsMuted, setMuted, SND, vib, stopRumble } from '../services/audio';
+import { getIsMuted, setMuted, stopRumble } from '../services/audio';
 
 interface PizzaContextValue {
   state: OrderState;
@@ -104,28 +104,28 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [muted]);
 
   const setStage = useCallback((stage: Stage) => {
-    setState(prev => ({ ...prev, stage }));
+    setState((prev) => ({ ...prev, stage }));
   }, []);
 
   const setSizeId = useCallback((sizeId: SizeId) => {
-    setState(prev => ({ ...prev, sizeId }));
+    setState((prev) => ({ ...prev, sizeId }));
   }, []);
 
   const setCrustId = useCallback((crustId: CrustId) => {
-    setState(prev => ({ ...prev, crustId }));
+    setState((prev) => ({ ...prev, crustId }));
   }, []);
 
   const setSauceId = useCallback((sauceId: SauceId) => {
-    setState(prev => ({ ...prev, sauceId }));
+    setState((prev) => ({ ...prev, sauceId }));
   }, []);
 
   const setCheeseId = useCallback((cheeseId: CheeseId) => {
-    setState(prev => ({ ...prev, cheeseId }));
+    setState((prev) => ({ ...prev, cheeseId }));
   }, []);
 
   const setCheeseUnits = useCallback((units: number) => {
     const clamped = Math.max(1, Math.min(10, Math.round(units)));
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       cheeseUnits: clamped,
       extraCheese: clamped > 1
@@ -133,7 +133,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const addCheeseUnit = useCallback(() => {
-    setState(prev => {
+    setState((prev) => {
       const next = Math.min(10, (prev.cheeseUnits || 1) + 1);
       return {
         ...prev,
@@ -144,7 +144,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const removeCheeseUnit = useCallback(() => {
-    setState(prev => {
+    setState((prev) => {
       const next = Math.max(1, (prev.cheeseUnits || 1) - 1);
       return {
         ...prev,
@@ -155,7 +155,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const setExtraCheese = useCallback((extraCheese: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       extraCheese,
       cheeseUnits: extraCheese ? Math.max(2, prev.cheeseUnits || 1) : 1
@@ -163,22 +163,22 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const setZone = useCallback((zone: Zone) => {
-    setState(prev => ({ ...prev, zone }));
+    setState((prev) => ({ ...prev, zone }));
   }, []);
 
   const setDoneness = useCallback((doneness: number | ((prev: number) => number)) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       doneness: typeof doneness === 'function' ? doneness(prev.doneness) : doneness
     }));
   }, []);
 
   const setBakeQ = useCallback((bakeQ: BakeQuality | null) => {
-    setState(prev => ({ ...prev, bakeQ }));
+    setState((prev) => ({ ...prev, bakeQ }));
   }, []);
 
   const setPulled = useCallback((pulled: boolean) => {
-    setState(prev => ({ ...prev, pulled }));
+    setState((prev) => ({ ...prev, pulled }));
   }, []);
 
   const getUnits = useCallback(
@@ -228,12 +228,12 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [zoneCount]);
 
   const varieties = useCallback((): number => {
-    return CATALOG.toppings.filter(t => unitsTotal(t.id) > 0).length;
+    return CATALOG.toppings.filter((t) => unitsTotal(t.id) > 0).length;
   }, [unitsTotal]);
 
   const canPlace = useCallback(
     (id: ToppingId): CanPlaceResult => {
-      const t = CATALOG.toppings.find(k => k.id === id);
+      const t = CATALOG.toppings.find((k) => k.id === id);
       if (!t) return { ok: false, reason: 'Unknown topping' };
       const n = unitsTotal(id);
       if (n >= t.max)
@@ -251,104 +251,101 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [unitsTotal, varieties, grams, state.zone]
   );
 
-function generateHumanLikeDistribution(
-  count: number,
-  zone: Zone,
-  id: ToppingId,
-  existingPlaced: Record<string, PlacedToppingItem[]>,
-  targetCenter?: { x: number; y: number } | null
-): { x: number; y: number }[] {
-  const sameItems = existingPlaced[id] || [];
-  const allItems = Object.values(existingPlaced).flat();
-  const batch: { x: number; y: number }[] = [];
+  function generateHumanLikeDistribution(
+    count: number,
+    zone: Zone,
+    id: ToppingId,
+    existingPlaced: Record<string, PlacedToppingItem[]>,
+    targetCenter?: { x: number; y: number } | null
+  ): { x: number; y: number }[] {
+    const sameItems = existingPlaced[id] || [];
+    const allItems = Object.values(existingPlaced).flat();
+    const batch: { x: number; y: number }[] = [];
 
-  for (let i = 0; i < count; i++) {
-    // If targetCenter provided (drag-and-drop), first item lands right at targetCenter
-    if (targetCenter && i === 0) {
-      let px = targetCenter.x;
-      let py = targetCenter.y;
-      const d = Math.hypot(px, py);
-      if (d > 0.80) {
-        px = (px / d) * 0.80;
-        py = (py / d) * 0.80;
+    for (let i = 0; i < count; i++) {
+      // If targetCenter provided (drag-and-drop), first item lands right at targetCenter
+      if (targetCenter && i === 0) {
+        let px = targetCenter.x;
+        let py = targetCenter.y;
+        const d = Math.hypot(px, py);
+        if (d > 0.8) {
+          px = (px / d) * 0.8;
+          py = (py / d) * 0.8;
+        }
+        if (zone === 'left') px = Math.min(px, -0.08);
+        else if (zone === 'right') px = Math.max(px, 0.08);
+        batch.push({ x: +px.toFixed(3), y: +py.toFixed(3) });
+        continue;
       }
-      if (zone === 'left') px = Math.min(px, -0.08);
-      else if (zone === 'right') px = Math.max(px, 0.08);
-      batch.push({ x: +px.toFixed(3), y: +py.toFixed(3) });
-      continue;
+
+      let bestPoint = { x: 0, y: 0 };
+      let bestScore = -Infinity;
+      const numCandidates = targetCenter ? 36 : 64;
+
+      for (let c = 0; c < numCandidates; c++) {
+        let candX: number;
+        let candY: number;
+
+        if (targetCenter) {
+          // Generous, natural scatter around target center (min distance 0.22 so never clumping)
+          const baseAngle = i * ((Math.PI * 2) / count) + (Math.random() - 0.5) * 0.75;
+          const dist = 0.22 + Math.random() * 0.14;
+          candX = targetCenter.x + Math.cos(baseAngle) * dist;
+          candY = targetCenter.y + Math.sin(baseAngle) * dist;
+        } else {
+          // Stratified area-uniform radial distribution across whole pizza / half pizza
+          const r = Math.sqrt(0.06 + Math.random() * 0.56); // radius in [0.24, 0.79]
+          let a = Math.random() * Math.PI * 2;
+          if (zone === 'left') a = Math.PI * 0.55 + Math.random() * Math.PI * 0.9;
+          else if (zone === 'right') a = -Math.PI * 0.45 + Math.random() * Math.PI * 0.9;
+          candX = Math.cos(a) * r;
+          candY = Math.sin(a) * r;
+        }
+
+        // Keep within pizza boundary and zone constraints
+        const cd = Math.hypot(candX, candY);
+        if (cd > 0.8) {
+          candX = (candX / cd) * 0.8;
+          candY = (candY / cd) * 0.8;
+        }
+        if (zone === 'left') candX = Math.min(candX, -0.08);
+        else if (zone === 'right') candX = Math.max(candX, 0.08);
+
+        // 1. Repulsion from same topping (including pieces in current batch)
+        let minSameDist = Infinity;
+        const allSame = [...sameItems, ...batch];
+        for (const p of allSame) {
+          const dist = Math.hypot(candX - p.x, candY - p.y);
+          if (dist < minSameDist) minSameDist = dist;
+        }
+        if (minSameDist === Infinity) minSameDist = 1.0;
+
+        // 2. Soft repulsion from other toppings
+        let minOtherDist = Infinity;
+        for (const p of allItems) {
+          const dist = Math.hypot(candX - p.x, candY - p.y);
+          if (dist < minOtherDist) minOtherDist = dist;
+        }
+        if (minOtherDist === Infinity) minOtherDist = 1.0;
+
+        // 3. Radial balance sweet spot preference (around 0.48)
+        const radDist = Math.hypot(candX, candY);
+        const radScore = 1.0 - Math.abs(radDist - 0.48) * 0.6;
+
+        const totalScore =
+          minSameDist * 3.5 + minOtherDist * 1.0 + radScore * 0.2 + Math.random() * 0.06;
+
+        if (totalScore > bestScore) {
+          bestScore = totalScore;
+          bestPoint = { x: +candX.toFixed(3), y: +candY.toFixed(3) };
+        }
+      }
+
+      batch.push(bestPoint);
     }
 
-    let bestPoint = { x: 0, y: 0 };
-    let bestScore = -Infinity;
-    const numCandidates = targetCenter ? 36 : 64;
-
-    for (let c = 0; c < numCandidates; c++) {
-      let candX: number;
-      let candY: number;
-
-      if (targetCenter) {
-        // Generous, natural scatter around target center (min distance 0.22 so never clumping)
-        const baseAngle = (i * ((Math.PI * 2) / count)) + (Math.random() - 0.5) * 0.75;
-        const dist = 0.22 + Math.random() * 0.14;
-        candX = targetCenter.x + Math.cos(baseAngle) * dist;
-        candY = targetCenter.y + Math.sin(baseAngle) * dist;
-      } else {
-        // Stratified area-uniform radial distribution across whole pizza / half pizza
-        const r = Math.sqrt(0.06 + Math.random() * 0.56); // radius in [0.24, 0.79]
-        let a = Math.random() * Math.PI * 2;
-        if (zone === 'left') a = Math.PI * 0.55 + Math.random() * Math.PI * 0.9;
-        else if (zone === 'right') a = -Math.PI * 0.45 + Math.random() * Math.PI * 0.9;
-        candX = Math.cos(a) * r;
-        candY = Math.sin(a) * r;
-      }
-
-      // Keep within pizza boundary and zone constraints
-      const cd = Math.hypot(candX, candY);
-      if (cd > 0.80) {
-        candX = (candX / cd) * 0.80;
-        candY = (candY / cd) * 0.80;
-      }
-      if (zone === 'left') candX = Math.min(candX, -0.08);
-      else if (zone === 'right') candX = Math.max(candX, 0.08);
-
-      // 1. Repulsion from same topping (including pieces in current batch)
-      let minSameDist = Infinity;
-      const allSame = [...sameItems, ...batch];
-      for (const p of allSame) {
-        const dist = Math.hypot(candX - p.x, candY - p.y);
-        if (dist < minSameDist) minSameDist = dist;
-      }
-      if (minSameDist === Infinity) minSameDist = 1.0;
-
-      // 2. Soft repulsion from other toppings
-      let minOtherDist = Infinity;
-      for (const p of allItems) {
-        const dist = Math.hypot(candX - p.x, candY - p.y);
-        if (dist < minOtherDist) minOtherDist = dist;
-      }
-      if (minOtherDist === Infinity) minOtherDist = 1.0;
-
-      // 3. Radial balance sweet spot preference (around 0.48)
-      const radDist = Math.hypot(candX, candY);
-      const radScore = 1.0 - Math.abs(radDist - 0.48) * 0.6;
-
-      const totalScore =
-        minSameDist * 3.5 +
-        minOtherDist * 1.0 +
-        radScore * 0.2 +
-        Math.random() * 0.06;
-
-      if (totalScore > bestScore) {
-        bestScore = totalScore;
-        bestPoint = { x: +candX.toFixed(3), y: +candY.toFixed(3) };
-      }
-    }
-
-    batch.push(bestPoint);
+    return batch;
   }
-
-  return batch;
-}
 
   const commitTopping = useCallback(
     (
@@ -358,20 +355,12 @@ function generateHumanLikeDistribution(
       y?: number,
       onSpawnPlaced?: (charge: number, lx: number, ly: number) => void
     ): number => {
-      const t = CATALOG.toppings.find(k => k.id === id)!;
+      const t = CATALOG.toppings.find((k) => k.id === id)!;
       const count =
-        zone === 'whole'
-          ? t.itemsPerUnit || 1
-          : Math.max(1, Math.round((t.itemsPerUnit || 1) / 2));
+        zone === 'whole' ? t.itemsPerUnit || 1 : Math.max(1, Math.round((t.itemsPerUnit || 1) / 2));
 
       const targetCenter = x !== undefined && y !== undefined ? { x, y } : null;
-      const positions = generateHumanLikeDistribution(
-        count,
-        zone,
-        id,
-        state.placed,
-        targetCenter
-      );
+      const positions = generateHumanLikeDistribution(count, zone, id, state.placed, targetCenter);
 
       const unitId = `u_${id}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       const newPlaced: PlacedToppingItem[] = [];
@@ -398,13 +387,13 @@ function generateHumanLikeDistribution(
         });
       }
 
-      setState(prev => {
+      setState((prev) => {
         const nextPlaced = { ...prev.placed };
         nextPlaced[id] = [...(nextPlaced[id] || []), ...newPlaced];
         return { ...prev, placed: nextPlaced };
       });
 
-      setSceneMirror(prev => [...prev, ...newScene]);
+      setSceneMirror((prev) => [...prev, ...newScene]);
 
       const charge = zone === 'whole' ? t.price : Math.round(t.price / 2);
       if (onSpawnPlaced && positions.length > 0) {
@@ -416,62 +405,59 @@ function generateHumanLikeDistribution(
     [state.placed]
   );
 
-  const removeOneTopping = useCallback(
-    (id: ToppingId): PlacedToppingItem[] | null => {
-      let removedItems: PlacedToppingItem[] = [];
-      let targetUnitId: string | undefined;
+  const removeOneTopping = useCallback((id: ToppingId): PlacedToppingItem[] | null => {
+    let removedItems: PlacedToppingItem[] = [];
+    let targetUnitId: string | undefined;
 
-      setState(prev => {
-        const p = prev.placed[id];
-        if (!p || !p.length) return prev;
+    setState((prev) => {
+      const p = prev.placed[id];
+      if (!p || !p.length) return prev;
 
-        const lastItem = p[p.length - 1];
-        targetUnitId = lastItem.unitId;
+      const lastItem = p[p.length - 1];
+      targetUnitId = lastItem.unitId;
 
-        const nextPlaced = { ...prev.placed };
-        if (targetUnitId) {
-          removedItems = p.filter(item => item.unitId === targetUnitId);
-          const remaining = p.filter(item => item.unitId !== targetUnitId);
-          if (remaining.length) {
-            nextPlaced[id] = remaining;
-          } else {
-            delete nextPlaced[id];
-          }
+      const nextPlaced = { ...prev.placed };
+      if (targetUnitId) {
+        removedItems = p.filter((item) => item.unitId === targetUnitId);
+        const remaining = p.filter((item) => item.unitId !== targetUnitId);
+        if (remaining.length) {
+          nextPlaced[id] = remaining;
         } else {
-          const t = CATALOG.toppings.find(k => k.id === id);
-          const countToRemove = t?.itemsPerUnit || 1;
-          const nextList = [...p];
-          removedItems = nextList.splice(Math.max(0, nextList.length - countToRemove));
-          if (nextList.length) {
-            nextPlaced[id] = nextList;
-          } else {
-            delete nextPlaced[id];
-          }
+          delete nextPlaced[id];
         }
-        return { ...prev, placed: nextPlaced };
-      });
-
-      setSceneMirror(prev => {
-        if (targetUnitId) {
-          return prev.filter(m => !(m.type === id && m.unitId === targetUnitId));
-        }
-        const t = CATALOG.toppings.find(k => k.id === id);
+      } else {
+        const t = CATALOG.toppings.find((k) => k.id === id);
         const countToRemove = t?.itemsPerUnit || 1;
-        let removed = 0;
-        const result = [...prev];
-        for (let i = result.length - 1; i >= 0 && removed < countToRemove; i--) {
-          if (result[i].type === id) {
-            result.splice(i, 1);
-            removed++;
-          }
+        const nextList = [...p];
+        removedItems = nextList.splice(Math.max(0, nextList.length - countToRemove));
+        if (nextList.length) {
+          nextPlaced[id] = nextList;
+        } else {
+          delete nextPlaced[id];
         }
-        return result;
-      });
+      }
+      return { ...prev, placed: nextPlaced };
+    });
 
-      return removedItems.length > 0 ? removedItems : null;
-    },
-    []
-  );
+    setSceneMirror((prev) => {
+      if (targetUnitId) {
+        return prev.filter((m) => !(m.type === id && m.unitId === targetUnitId));
+      }
+      const t = CATALOG.toppings.find((k) => k.id === id);
+      const countToRemove = t?.itemsPerUnit || 1;
+      let removed = 0;
+      const result = [...prev];
+      for (let i = result.length - 1; i >= 0 && removed < countToRemove; i--) {
+        if (result[i].type === id) {
+          result.splice(i, 1);
+          removed++;
+        }
+      }
+      return result;
+    });
+
+    return removedItems.length > 0 ? removedItems : null;
+  }, []);
 
   const addOneTopping = useCallback(
     (
@@ -501,7 +487,13 @@ function generateHumanLikeDistribution(
       [cr.label + ' crust', cr.price, undefined, undefined, 'base']
     ];
     if (state.sauceId) {
-      out.push([CATALOG.sauces[state.sauceId].label + ' sauce', CATALOG.sauces[state.sauceId].price, undefined, undefined, 'sauce']);
+      out.push([
+        CATALOG.sauces[state.sauceId].label + ' sauce',
+        CATALOG.sauces[state.sauceId].price,
+        undefined,
+        undefined,
+        'sauce'
+      ]);
     }
     if (state.cheeseId && CATALOG.cheeses[state.cheeseId]) {
       const ch = CATALOG.cheeses[state.cheeseId];
@@ -523,17 +515,11 @@ function generateHumanLikeDistribution(
       if (!n) continue;
       const cents = t.price * z.whole + Math.round(t.price / 2) * (z.left + z.right);
       const zs =
-        n === z.whole
-          ? 'whole'
-          : z.left && z.right
-          ? 'split'
-          : z.left
-          ? 'left half'
-          : 'right half';
+        n === z.whole ? 'whole' : z.left && z.right ? 'split' : z.left ? 'left half' : 'right half';
       out.push([t.label + ' ×' + n, cents, zs, t.id, 'top']);
     }
     return out;
-  }, [state.sizeId, state.crustId, state.sauceId, state.cheeseId, state.cheeseUnits, state.extraCheese, zoneCount]);
+  }, [state.sizeId, state.crustId, state.sauceId, state.cheeseId, state.cheeseUnits, zoneCount]);
 
   const subtotal = useCallback((): number => {
     return lines().reduce((acc, l) => acc + l[1], 0);
@@ -550,8 +536,8 @@ function generateHumanLikeDistribution(
         cheeseUnits: state.cheeseUnits || 1,
         extraCheese: (state.cheeseUnits || 1) > 1,
         toppings: CATALOG.toppings
-          .filter(t => unitsTotal(t.id) > 0)
-          .map(t => ({ id: t.id, units: zoneCount(t.id) }))
+          .filter((t) => unitsTotal(t.id) > 0)
+          .map((t) => ({ id: t.id, units: zoneCount(t.id) }))
       },
       preferences: {
         bake: state.bakeQ || 'standard'

@@ -29,7 +29,11 @@ export const Header: React.FC<HeaderProps> = ({ onRestart }) => {
           }}
         >
           <b style={{ color: 'var(--basil)', fontWeight: 900 }}>Doodle</b>
-          <span style={{ color: 'var(--ink2)', margin: '0 3px', fontSize: '13px', fontWeight: 800 }}>&amp;</span>
+          <span
+            style={{ color: 'var(--ink2)', margin: '0 3px', fontSize: '13px', fontWeight: 800 }}
+          >
+            &amp;
+          </span>
           <b style={{ color: 'var(--tomato-d)', fontWeight: 900 }}>Dough</b>
         </span>
       </div>

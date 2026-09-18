@@ -23,7 +23,7 @@ export function calculatePizzaScore(
 ): PizzaScoreBreakdown {
   // 1. Sauce Coverage Score (Max 2.5)
   const sauceRatio = Math.min(1.2, sauceCoverage / SAUCE_NEED);
-  let sauceScore = 2.5;
+  let sauceScore: number;
   if (sauceRatio < 0.5) {
     sauceScore = 1.0 + sauceRatio * 2;
   } else if (sauceRatio < 0.95) {
@@ -37,7 +37,7 @@ export function calculatePizzaScore(
   // 2. Cheese Blanket Score (Max 2.5)
   const cheeseTarget = state.extraCheese ? 0.72 : 0.58;
   const cheeseRatio = Math.min(1.2, cheeseCoverage / cheeseTarget);
-  let cheeseScore = 2.5;
+  let cheeseScore: number;
   if (cheeseRatio < 0.5) {
     cheeseScore = 1.0 + cheeseRatio * 2;
   } else if (cheeseRatio < 0.95) {
@@ -47,7 +47,7 @@ export function calculatePizzaScore(
   }
 
   // 3. Bake Precision Score (Max 2.5)
-  let bakeScore = 2.5;
+  let bakeScore: number;
   if (state.bakeQ === 'Perfect') {
     bakeScore = 2.5;
   } else if (state.bakeQ === 'Well done') {
@@ -84,7 +84,7 @@ export function calculatePizzaScore(
     }
   }
 
-  let toppingScore = 2.5;
+  let toppingScore: number;
   if (totalToppingCount === 0) {
     toppingScore = 2.4;
   } else {
@@ -98,8 +98,8 @@ export function calculatePizzaScore(
   const clampedScore = Math.max(1.0, Math.min(10.0, rawScore));
   const finalScore = Math.round(clampedScore * 10) / 10;
 
-  let feedback = 'Sensational artisan creation!';
-  let badge = 'Master Pizzaiolo 🏆';
+  let feedback: string;
+  let badge: string;
 
   if (finalScore >= 9.5) {
     feedback = 'Flawless balance, crust blister & melted perfection!';

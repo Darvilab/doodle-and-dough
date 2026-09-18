@@ -100,7 +100,14 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
       right: '7%',
       driftClass: 'drift-star',
       content: (
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="#E7AF40" stroke="#33241A" strokeWidth="1.8">
+        <svg
+          viewBox="0 0 24 24"
+          width="26"
+          height="26"
+          fill="#E7AF40"
+          stroke="#33241A"
+          strokeWidth="1.8"
+        >
           <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
         </svg>
       )
@@ -130,7 +137,14 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
       right: '9%',
       driftClass: 'drift-5',
       content: (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="#E7AF40" stroke="#33241A" strokeWidth="1">
+        <svg
+          viewBox="0 0 24 24"
+          width="22"
+          height="22"
+          fill="#E7AF40"
+          stroke="#33241A"
+          strokeWidth="1"
+        >
           <path d="M12 0L14 9L23 12L14 15L12 24L10 15L1 12L10 9Z" />
         </svg>
       )
@@ -195,10 +209,10 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
     SND.pop();
     vib(12);
 
-    setPoppedItems(prev => ({ ...prev, [id]: true }));
+    setPoppedItems((prev) => ({ ...prev, [id]: true }));
     // Respawn after 2.8s
     setTimeout(() => {
-      setPoppedItems(prev => ({ ...prev, [id]: false }));
+      setPoppedItems((prev) => ({ ...prev, [id]: false }));
     }, 2800);
   }, []);
 
@@ -244,7 +258,7 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
     <div id="startOverlay" className={!visible ? 'hide' : ''}>
       {/* Floating Interactive Ingredients Layer */}
       <div className="start-floating-layer">
-        {floatingElements.map(item => {
+        {floatingElements.map((item) => {
           if (poppedItems[item.id]) {
             return (
               <div
@@ -278,11 +292,7 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
       </div>
 
       {/* Mascot Stage with Sunburst and Interactive Jump */}
-      <div
-        className="mascot-stage"
-        onClick={handleMascotClick}
-        title="Tap the chef!"
-      >
+      <div className="mascot-stage" onClick={handleMascotClick} title="Tap the chef!">
         <div className="mascot-sunburst" />
         <div className="mascot-halo-glow" />
         <img
@@ -291,14 +301,16 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
           className={`sliceart ${mascotJumping ? 'jumping' : ''}`}
         />
         {/* Mascot Reaction Sparks */}
-        {mascotSparks.map(s => (
+        {mascotSparks.map((s) => (
           <span
             key={s.id}
             className="mascot-spark"
-            style={{
-              '--dx': s.dx,
-              '--dy': s.dy
-            } as React.CSSProperties}
+            style={
+              {
+                '--dx': s.dx,
+                '--dy': s.dy
+              } as React.CSSProperties
+            }
           >
             {s.emoji}
           </span>
@@ -308,20 +320,36 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
       {/* Title Logo Stage with Entrance Bounce & Celebration Sparks */}
       <div className="start-logo-stage" key={visible ? 'logo-active' : 'logo-idle'}>
         <div className="start-logo-wrap">
-          <img
-            src={textLogoImg}
-            alt="Doodle & Dough — Pizza Your Way"
-            className="main-text-logo"
-          />
+          <img src={textLogoImg} alt="Doodle & Dough — Pizza Your Way" className="main-text-logo" />
           <div className="logo-sheen" />
         </div>
 
         {/* Playful Arcade Sparks on Text Logo Entrance (Auto, Once) */}
         <div className="logo-intro-sparks" aria-hidden="true">
-          <span className="logo-spark sp-1" style={{ '--dx': '-76px', '--dy': '-26px' } as React.CSSProperties}>✨</span>
-          <span className="logo-spark sp-2" style={{ '--dx': '76px', '--dy': '-28px' } as React.CSSProperties}>⭐</span>
-          <span className="logo-spark sp-3" style={{ '--dx': '-84px', '--dy': '18px' } as React.CSSProperties}>🍕</span>
-          <span className="logo-spark sp-4" style={{ '--dx': '82px', '--dy': '20px' } as React.CSSProperties}>✨</span>
+          <span
+            className="logo-spark sp-1"
+            style={{ '--dx': '-76px', '--dy': '-26px' } as React.CSSProperties}
+          >
+            ✨
+          </span>
+          <span
+            className="logo-spark sp-2"
+            style={{ '--dx': '76px', '--dy': '-28px' } as React.CSSProperties}
+          >
+            ⭐
+          </span>
+          <span
+            className="logo-spark sp-3"
+            style={{ '--dx': '-84px', '--dy': '18px' } as React.CSSProperties}
+          >
+            🍕
+          </span>
+          <span
+            className="logo-spark sp-4"
+            style={{ '--dx': '82px', '--dy': '20px' } as React.CSSProperties}
+          >
+            ✨
+          </span>
         </div>
       </div>
 
@@ -336,36 +364,38 @@ export const StartOverlay: React.FC<StartOverlayProps> = ({ visible, onStart }) 
 
       {/* Pricing Pill */}
       <div className="pricehint">
-        <span><b>8” Personal</b> from Rs. 599 · <b>12” Medium</b> from Rs. 999</span>
-        <small style={{ color: 'var(--basil)', fontWeight: 800 }}>🌿 All crusts finished with garlic-infused olive oil</small>
+        <span>
+          <b>8” Personal</b> from Rs. 599 · <b>12” Medium</b> from Rs. 999
+        </span>
+        <small style={{ color: 'var(--basil)', fontWeight: 800 }}>
+          🌿 All crusts finished with garlic-infused olive oil
+        </small>
       </div>
 
       {/* Juicy Arcade Start Button */}
-      <button
-        className="start-game-btn"
-        onClick={handleLaunch}
-        disabled={isLaunching}
-      >
+      <button className="start-game-btn" onClick={handleLaunch} disabled={isLaunching}>
         <span>Start Building</span>
         <span className="btn-arrow">→</span>
 
         {/* Confetti Burst Particles */}
-        {confetti.map(c => (
+        {confetti.map((c) => (
           <span
             key={c.id}
             className="start-confetti"
-            style={{
-              '--cx': c.cx,
-              '--cy': c.cy,
-              '--cr': c.cr,
-              width: c.char ? 'auto' : `${c.size}px`,
-              height: c.char ? 'auto' : `${c.size}px`,
-              backgroundColor: c.char ? 'transparent' : c.color,
-              borderRadius: c.char ? '0' : '50%',
-              fontSize: c.char ? `${c.size}px` : 'inherit',
-              left: '50%',
-              top: '50%'
-            } as React.CSSProperties}
+            style={
+              {
+                '--cx': c.cx,
+                '--cy': c.cy,
+                '--cr': c.cr,
+                width: c.char ? 'auto' : `${c.size}px`,
+                height: c.char ? 'auto' : `${c.size}px`,
+                backgroundColor: c.char ? 'transparent' : c.color,
+                borderRadius: c.char ? '0' : '50%',
+                fontSize: c.char ? `${c.size}px` : 'inherit',
+                left: '50%',
+                top: '50%'
+              } as React.CSSProperties
+            }
           >
             {c.char}
           </span>

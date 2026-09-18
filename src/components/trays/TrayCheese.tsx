@@ -28,14 +28,8 @@ export const TrayCheese: React.FC<TrayCheeseProps> = ({
   onBlanketCheese,
   onClearCheese
 }) => {
-  const {
-    state,
-    setCheeseId,
-    setCheeseUnits,
-    addCheeseUnit,
-    removeCheeseUnit,
-    showToast
-  } = usePizza();
+  const { state, setCheeseId, setCheeseUnits, addCheeseUnit, removeCheeseUnit, showToast } =
+    usePizza();
 
   const currentUnits = state.cheeseUnits || 1;
   const currentTier = CHEESE_TIERS[currentUnits - 1] || CHEESE_TIERS[0];
@@ -125,7 +119,7 @@ export const TrayCheese: React.FC<TrayCheeseProps> = ({
       </div>
 
       <div className="seg game-seg" id="segCheese">
-        {(Object.keys(CATALOG.cheeses) as CheeseId[]).map(id => {
+        {(Object.keys(CATALOG.cheeses) as CheeseId[]).map((id) => {
           const ch = CATALOG.cheeses[id];
           return (
             <button
@@ -136,11 +130,15 @@ export const TrayCheese: React.FC<TrayCheeseProps> = ({
             >
               <span className="seg-label">
                 <i className="dotc" style={{ background: ch.colors[0] }} />
-                {id === 'blend' ? 'Blend' : id === 'mozzarella' ? 'Mozzarella' : id === 'yak' ? 'Yak' : 'Kanchan'}
+                {id === 'blend'
+                  ? 'Blend'
+                  : id === 'mozzarella'
+                    ? 'Mozzarella'
+                    : id === 'yak'
+                      ? 'Yak'
+                      : 'Kanchan'}
               </span>
-              <small>
-                {ch.price ? `+${fmt(ch.price)}` : 'included'}
-              </small>
+              <small>{ch.price ? `+${fmt(ch.price)}` : 'included'}</small>
               {state.cheeseId === id && <span className="opt-check">✓</span>}
             </button>
           );
@@ -186,7 +184,7 @@ export const TrayCheese: React.FC<TrayCheeseProps> = ({
 
         {/* 10-pip arcade power meter */}
         <div className="cheese-pips" title="Select cheese layer (1 to 10)">
-          {CHEESE_TIERS.map(t => (
+          {CHEESE_TIERS.map((t) => (
             <button
               key={t.level}
               type="button"
@@ -202,7 +200,12 @@ export const TrayCheese: React.FC<TrayCheeseProps> = ({
           <span>
             Tier: <b>{currentTier.name}</b>
           </span>
-          <span style={{ color: currentUnits > 1 ? 'var(--tomato-d)' : 'var(--basil)', fontWeight: 700 }}>
+          <span
+            style={{
+              color: currentUnits > 1 ? 'var(--tomato-d)' : 'var(--basil)',
+              fontWeight: 700
+            }}
+          >
             {currentTier.desc}
           </span>
         </div>
