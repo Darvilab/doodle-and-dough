@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import logoImg from '../assets/logo.png';
-import textLogoImg from '../assets/main-text-logo.png';
+import logoImg from '../assets/logo.webp';
+import textLogoImg from '../assets/main-text-logo.webp';
 import { SND, vib, getAudioContext } from '../services/audio';
 import { InstallPrompt } from './InstallPrompt';
 

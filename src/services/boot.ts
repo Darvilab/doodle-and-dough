@@ -1,10 +1,10 @@
-import logoImg from '../assets/logo.png';
-import textLogoImg from '../assets/main-text-logo.png';
+import logoImg from '../assets/logo.webp';
+import textLogoImg from '../assets/main-text-logo.webp';
 
 // Never keep people on the loader forever — reveal whatever has arrived by then.
 const MAX_WAIT_MS = 15000;
 
-const CRITICAL_IMAGES = [`${import.meta.env.BASE_URL}background.jpeg`, logoImg, textLogoImg];
+const CRITICAL_IMAGES = [`${import.meta.env.BASE_URL}background.webp`, logoImg, textLogoImg];
 
 // One face per file Google serves; the variable fonts cover every weight we use.
 const CRITICAL_FONTS = ['700 16px Fraunces', 'italic 900 16px Fraunces', '600 16px Outfit'];

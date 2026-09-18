@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePizza } from '../context/PizzaContext';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.webp';
 
 interface HeaderProps {
   onRestart: () => void;

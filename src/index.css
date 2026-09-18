@@ -52,7 +52,7 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--paper);
-  background-image: url('/background.jpeg');
+  background-image: url('/background.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -354,7 +354,7 @@ canvas {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--paper) url('/background.jpeg') center/cover no-repeat;
+  background: var(--paper) url('/background.webp') center/cover no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
