@@ -267,7 +267,8 @@ header {
 #stagewrap {
   flex: 1;
   position: relative;
-  min-height: 0;
+  /* Keep the pizza playable on short phones: the tray scrolls instead of squeezing the stage */
+  min-height: max(220px, 42dvh);
   overflow: hidden;
 }
 
@@ -1125,14 +1126,28 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  justify-content: center;
+  justify-content: flex-start;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  flex-shrink: 1;
+}
+
+#tray > * {
   flex-shrink: 0;
 }
 
+/* Center short content; auto margins (unlike justify-content: center) never clip the top when it scrolls */
+#tray > :first-child {
+  margin-top: auto;
+}
+
+#tray > :last-child {
+  margin-bottom: auto;
+}
+
 /* When showing the receipt, align to top so the score card isn't clipped */
-#tray:has(.receipt) {
-  justify-content: flex-start;
+#tray:has(.receipt) > :first-child {
+  margin-top: 0;
 }
 
 .tray-top {
@@ -3176,4 +3191,45 @@ canvas {
 }
 .curl-c {
   animation: steamRise 2.4s ease-out infinite 1.4s;
+}
+
+/* Narrow phones */
+@media (max-width: 420px) {
+  .game-arcade-ribbon {
+    white-space: nowrap;
+    letter-spacing: 1px;
+    font-size: 10px;
+  }
+
+  #segSauce {
+    gap: 4px;
+  }
+
+  #segSauce .seg-label {
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+    letter-spacing: -0.2px;
+  }
+}
+
+@media (max-width: 340px) {
+  #bottombar {
+    gap: 8px;
+    padding: 10px 10px;
+  }
+
+  #bottombar .btn {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+
+  .tot {
+    min-width: 0;
+  }
+
+  #segSauce {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
