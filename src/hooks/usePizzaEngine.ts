@@ -46,6 +46,36 @@ function mixHex(h1: string, h2: string, t: number): string {
   );
 }
 
+function rgbaHex(h: string, a: number): string {
+  const [r, g, b] = hex2rgb(h);
+  return `rgba(${r},${g},${b},${a.toFixed(3)})`;
+}
+
+/** Accepts '#rrggbb' or 'rgba(r,g,b,a)' and returns '#rrggbb' (alpha dropped). */
+function cssToHex(c: string): string {
+  if (c.startsWith('#')) return c;
+  const m = c.match(/[\d.]+/g);
+  if (!m || m.length < 3) return '#F3CB77';
+  return (
+    '#' +
+    m
+      .slice(0, 3)
+      .map((v) => Math.round(Number(v)).toString(16).padStart(2, '0'))
+      .join('')
+  );
+}
+
+/** Melted-cheese palette: creamy body plus a darker golden edge where the molten mass ends. */
+function cheeseLookOf(colors: string[]) {
+  const hexes = colors.map(cssToHex);
+  let avg = hexes[0];
+  for (let i = 1; i < hexes.length; i++) avg = mixHex(avg, hexes[i], 1 / (i + 1));
+  return {
+    body: mixHex(avg, '#FFF4DA', 0.2),
+    edge: mixHex(avg, '#B8661F', 0.5)
+  };
+}
+
 function rrPath(
   g: CanvasRenderingContext2D,
   x: number,
@@ -205,6 +235,15 @@ for (let i = 0; i < 26; i++) {
   });
 }
 
+// Gaps in the melted cheese where the sauce peeks through
+const r3 = mulberry32(4242);
+const STATIC_CHEESE_HOLES: { x: number; y: number; r: number }[] = [];
+for (let i = 0; i < 16; i++) {
+  const a = r3() * TAU;
+  const rr = Math.sqrt(r3()) * 0.86;
+  STATIC_CHEESE_HOLES.push({ x: Math.cos(a) * rr, y: Math.sin(a) * rr, r: 0.045 + r3() * 0.04 });
+}
+
 const STATIC_DOUGH_DIMPLES: { a: number; d: number; r: number }[] = [];
 for (let i = 0; i < 8; i++) {
   STATIC_DOUGH_DIMPLES.push({ a: r2() * TAU, d: 0.2 + r2() * 0.55, r: 0.05 + r2() * 0.06 });
@@ -301,7 +340,9 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     baseKey: '',
     sauceDirty: true,
     cheeseDirty: true,
-    meterAcc: 0
+    meterAcc: 0,
+    cheeseMeltKey: -1,
+    cheeseLook: cheeseLookOf(CHEESE_C)
   });
 
   // Offscreen canvas caches
@@ -378,7 +419,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     const eng = engineRef.current;
     const inn = innerFrac();
     const sx = offscreenRef.current.sauceX;
-    sx.globalAlpha = 0.36;
+    sx.globalAlpha = 0.45;
     sx.fillStyle = eng.sauceColor;
     blobDraw(sx, eng.cx + o.x * eng.R * inn, eng.cy + o.y * eng.R * inn, o.r * eng.R * inn);
     sx.globalAlpha = 1;
@@ -405,20 +446,118 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     eng.sauceDirty = false;
   };
 
+  /** Same three-lobe outline as blobDraw, as a path only (for strokes). */
+  const blobOutline = (g: CanvasRenderingContext2D, x: number, y: number, r: number) => {
+    g.moveTo(x + r, y);
+    g.arc(x, y, r, 0, TAU);
+    g.moveTo(x + r * 0.55 + r * 0.55, y + r * 0.2);
+    g.arc(x + r * 0.55, y + r * 0.2, r * 0.55, 0, TAU);
+    g.moveTo(x - r * 0.4 + r * 0.5, y - r * 0.35);
+    g.arc(x - r * 0.4, y - r * 0.35, r * 0.5, 0, TAU);
+  };
+
+  /**
+   * Cheese goes from loose shreds (raw) to one molten, glossy mass as the pizza bakes:
+   * blobs swell and merge, a darker golden rim outlines the pools, sauce peeks through
+   * a few gaps, and the surface browns towards the crust.
+   */
   const repaintCheese = () => {
     if (!offscreenRef.current) return;
     const eng = engineRef.current;
     const cx = offscreenRef.current.cheeseX;
     cx.setTransform(eng.DPR, 0, 0, eng.DPR, 0, 0);
     cx.clearRect(0, 0, eng.W, eng.H);
-    const cheeseType = optionsRef.current.state.cheeseId;
-    const colors = CATALOG.cheeses[cheeseType]?.colors || CHEESE_C;
-    for (let i = 0; i < eng.cheese.length; i++) {
-      const o = eng.cheese[i];
-      o.c = colors[i % colors.length];
-      blitCheese(o);
-    }
+    const state = optionsRef.current.state;
+    const colors = CATALOG.cheeses[state.cheeseId]?.colors || CHEESE_C;
+    const look = cheeseLookOf(colors);
+    eng.cheeseLook = look;
     eng.cheeseDirty = false;
+    if (!eng.cheese.length) return;
+
+    const k = eng.R * innerFrac();
+    const d = eng.doneness;
+    const melt = clamp((d - 0.2) / 0.45, 0, 1);
+    const extra = Math.max(0, (state.cheeseUnits || 1) - 1) + (state.extraCheese ? 1 : 0);
+    const grow = 1 + melt * (0.3 + Math.min(0.2, extra * 0.05));
+
+    for (let i = 0; i < eng.cheese.length; i++) {
+      eng.cheese[i].c = colors[i % colors.length];
+    }
+
+    // 1. Darker golden rim — only survives where the molten mass ends
+    if (melt > 0) {
+      cx.globalAlpha = melt;
+      cx.fillStyle = look.edge;
+      for (const o of eng.cheese) {
+        blobDraw(cx, eng.cx + o.x * k, eng.cy + o.y * k, o.r * k * grow + 1.8);
+      }
+      cx.globalAlpha = 1;
+    }
+
+    // 2. Cheese body: individual shreds blend into one creamy colour as they melt
+    for (const o of eng.cheese) {
+      cx.fillStyle = melt > 0 ? mixHex(cssToHex(o.c), look.body, melt) : o.c;
+      blobDraw(cx, eng.cx + o.x * k, eng.cy + o.y * k, o.r * k * grow);
+    }
+
+    // 3. Sauce peeking through gaps in the molten cheese, each gap rimmed in golden brown
+    const holeA = clamp((melt - 0.25) / 0.5, 0, 1);
+    cx.globalCompositeOperation = 'source-atop';
+    if (holeA > 0) {
+      cx.globalAlpha = holeA;
+      cx.fillStyle = mixHex(eng.sauceColor, '#7A1E10', 0.15);
+      for (const h of STATIC_CHEESE_HOLES) {
+        blobDraw(cx, eng.cx + h.x * k, eng.cy + h.y * k, h.r * k);
+      }
+      cx.strokeStyle = look.edge;
+      cx.lineWidth = 2.4;
+      cx.beginPath();
+      for (const h of STATIC_CHEESE_HOLES) {
+        blobOutline(cx, eng.cx + h.x * k, eng.cy + h.y * k, h.r * k);
+      }
+      cx.stroke();
+      cx.globalAlpha = 1;
+    }
+
+    // 4. Oven browning: stronger towards the hot outer edge
+    const brown = clamp((d - 0.45) / 0.45, 0, 1.4);
+    if (brown > 0) {
+      const grad = cx.createRadialGradient(eng.cx, eng.cy, 0, eng.cx, eng.cy, k);
+      grad.addColorStop(0, `rgba(232,160,60,${(0.1 * brown).toFixed(3)})`);
+      grad.addColorStop(0.6, `rgba(214,132,42,${(0.26 * brown).toFixed(3)})`);
+      grad.addColorStop(1, `rgba(160,82,26,${(0.5 * brown).toFixed(3)})`);
+      cx.fillStyle = grad;
+      cx.fillRect(eng.cx - k, eng.cy - k, k * 2, k * 2);
+    }
+
+    // 5. Glossy highlights on the molten surface
+    if (melt > 0) {
+      cx.strokeStyle = `rgba(255,253,240,${(0.6 * melt).toFixed(3)})`;
+      cx.lineCap = 'round';
+      cx.lineWidth = 1.6;
+      cx.beginPath();
+      for (let i = 0; i < eng.cheese.length; i += 9) {
+        const o = eng.cheese[i];
+        const r = o.r * k * grow;
+        const x = eng.cx + o.x * k - r * 0.25;
+        const y = eng.cy + o.y * k - r * 0.3;
+        cx.moveTo(x + Math.cos(3.6) * r * 0.5, y + Math.sin(3.6) * r * 0.5);
+        cx.arc(x, y, r * 0.5, 3.6, 4.9);
+      }
+      cx.stroke();
+      cx.fillStyle = `rgba(255,255,248,${(0.75 * melt).toFixed(3)})`;
+      cx.beginPath();
+      for (let i = 4; i < eng.cheese.length; i += 23) {
+        const o = eng.cheese[i];
+        const x = eng.cx + o.x * k;
+        const y = eng.cy + o.y * k;
+        cx.moveTo(x + 1.3, y);
+        cx.arc(x, y, 1.3, 0, TAU);
+      }
+      cx.fill();
+    }
+
+    cx.globalCompositeOperation = 'source-over';
   };
 
   const blobPath = (
@@ -484,15 +623,15 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.clip();
       const grad = g.createRadialGradient(eng.cx, eng.cy, eng.R * inn * 0.9, eng.cx, eng.cy, eng.R);
       grad.addColorStop(0, 'rgba(60, 30, 10, 0.42)');
-      grad.addColorStop(0.35, 'rgba(235, 185, 105, 0.28)');
-      grad.addColorStop(0.7, 'rgba(255, 230, 160, 0.38)');
-      grad.addColorStop(1, 'rgba(70, 35, 12, 0.52)');
+      grad.addColorStop(0.35, 'rgba(225, 160, 75, 0.26)');
+      grad.addColorStop(0.7, 'rgba(250, 205, 125, 0.22)');
+      grad.addColorStop(1, 'rgba(90, 42, 12, 0.58)');
       g.fillStyle = grad;
       g.fillRect(eng.cx - eng.R * 1.1, eng.cy - eng.R * 1.1, eng.R * 2.2, eng.R * 2.2);
 
       // Continuous plump torus cornicione body (soft dough roll)
       drawOrganicPath(g, eng.cx, eng.cy, midRimR, 0.046);
-      g.strokeStyle = mixHex(crust, '#F5DEB3', 0.45);
+      g.strokeStyle = mixHex(crust, '#F2C47A', 0.22);
       g.lineWidth = rimThickness * 0.76;
       g.lineCap = 'round';
       g.lineJoin = 'round';
@@ -500,8 +639,8 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
 
       // Top ridge highlight of the plump dough roll with gentle flour sheen
       drawOrganicPath(g, eng.cx, eng.cy, midRimR * 1.01, 0.044);
-      g.strokeStyle = 'rgba(255, 246, 218, 0.52)';
-      g.lineWidth = rimThickness * 0.42;
+      g.strokeStyle = 'rgba(255, 224, 150, 0.4)';
+      g.lineWidth = rimThickness * 0.36;
       g.stroke();
 
       // Organic hand-crimped fold pleats along the perimeter (subtle dough folds, not disconnected beads)
@@ -562,9 +701,10 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       blobPath(g, eng.cx, eng.cy, 1, 0, TAU);
       g.clip();
       const thinGrad = g.createRadialGradient(eng.cx, eng.cy, eng.R * inn, eng.cx, eng.cy, eng.R);
-      thinGrad.addColorStop(0, 'rgba(80, 40, 15, 0.18)');
-      thinGrad.addColorStop(0.7, 'rgba(210, 165, 105, 0.24)');
-      thinGrad.addColorStop(1, 'rgba(100, 55, 20, 0.42)');
+      thinGrad.addColorStop(0, 'rgba(90, 45, 15, 0.3)');
+      thinGrad.addColorStop(0.4, 'rgba(250, 200, 120, 0.16)');
+      thinGrad.addColorStop(0.75, 'rgba(190, 110, 40, 0.24)');
+      thinGrad.addColorStop(1, 'rgba(95, 45, 15, 0.58)');
       g.fillStyle = thinGrad;
       g.fillRect(eng.cx - eng.R * 1.1, eng.cy - eng.R * 1.1, eng.R * 2.2, eng.R * 2.2);
 
@@ -603,26 +743,31 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       Math.PI * 1.6,
       32
     );
-    g.strokeStyle = `rgba(255,225,160,${sh})`;
+    g.strokeStyle = `rgba(255,214,140,${(sh * 0.6).toFixed(3)})`;
     g.lineWidth = eng.R * (1 - inn) * 0.55;
     g.stroke();
 
+    // Leopard-spot char blisters: soft-edged ovals stretched along the rim
     for (const b of STATIC_BLISTERS) {
       if (d > b.thr) {
         const k = clamp((d - b.thr) / 0.3, 0, 1);
-        g.fillStyle = mixHex('#D9A441', '#3A2010', k);
-        g.globalAlpha = 0.75;
+        const a = Math.atan2(b.y, b.x);
+        const blisterR = organicR(a, eng.R * b.rr, 0.04);
+        const rr = b.r * eng.R * (0.9 + k * 0.6);
+        const core = mixHex('#B06A28', '#2E170B', k);
+        g.save();
+        g.translate(eng.cx + b.x * blisterR, eng.cy + b.y * blisterR);
+        g.rotate(a + Math.PI / 2);
+        g.scale(1.45, 0.8);
+        const grad = g.createRadialGradient(0, 0, 0, 0, 0, rr);
+        grad.addColorStop(0, rgbaHex(core, 0.85));
+        grad.addColorStop(0.5, rgbaHex(core, 0.5));
+        grad.addColorStop(1, rgbaHex(core, 0));
+        g.fillStyle = grad;
         g.beginPath();
-        const blisterR = organicR(Math.atan2(b.y, b.x), eng.R * b.rr, 0.04);
-        g.arc(
-          eng.cx + b.x * blisterR,
-          eng.cy + b.y * blisterR,
-          b.r * eng.R * (1 + k * 0.5),
-          0,
-          TAU
-        );
+        g.arc(0, 0, rr, 0, TAU);
         g.fill();
-        g.globalAlpha = 1;
+        g.restore();
       }
     }
 
@@ -654,7 +799,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     g.fill();
 
     rrPath(g, x, y, bw, bh, 26);
-    g.fillStyle = '#C8995F';
+    g.fillStyle = '#B7854F';
     g.fill();
     g.strokeStyle = INK;
     g.lineWidth = 2.5;
@@ -675,11 +820,25 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.stroke();
     }
 
+    // Light flour dusting: soft patches of specks rather than solid discs
     for (const f of STATIC_FLOUR_PATCHES) {
-      g.fillStyle = 'rgba(255,251,238,.4)';
+      const fx = x + f.px * bw;
+      const fy = y + f.py * bh;
+      const grad = g.createRadialGradient(fx, fy, 0, fx, fy, f.r);
+      grad.addColorStop(0, 'rgba(255,251,238,.22)');
+      grad.addColorStop(1, 'rgba(255,251,238,0)');
+      g.fillStyle = grad;
       g.beginPath();
-      g.arc(x + f.px * bw, y + f.py * bh, f.r, 0, TAU);
+      g.arc(fx, fy, f.r, 0, TAU);
       g.fill();
+      g.fillStyle = 'rgba(255,251,238,.5)';
+      for (let i = 0; i < 9; i++) {
+        const a = i * 2.4 + f.r;
+        const rr = f.r * (0.2 + ((i * 37) % 10) / 12);
+        g.beginPath();
+        g.arc(fx + Math.cos(a) * rr, fy + Math.sin(a) * rr, 0.7 + (i % 3) * 0.35, 0, TAU);
+        g.fill();
+      }
     }
 
     g.restore();
@@ -957,7 +1116,10 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     d: number
   ) => {
     const eng = engineRef.current;
-    const s = t.s * eng.R;
+    // Stable per-piece size jitter (±10%) so toppings don't look stamped
+    const jitter = Math.sin(t.rot * 43.7) * 0.5 + 0.5;
+    const s = t.s * eng.R * (0.9 + jitter * 0.2);
+    const melt = eng.cheese.length ? clamp((d - 0.3) / 0.4, 0, 1) : 0;
     g.save();
     g.translate(x, y);
     g.rotate(t.rot);
@@ -966,16 +1128,30 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       const sc = age >= 0 && age < 0.25 ? easeOutBack(clamp(age / 0.25, 0, 1)) : 1;
       g.scale(sc, sc);
     }
-    g.fillStyle = 'rgba(40,20,8,.18)';
-    g.beginPath();
-    g.ellipse(2, 3, s * 1.02, s * 0.9, 0, 0, TAU);
-    g.fill();
+    const cook = clamp((d - 0.35) / 0.4, 0, 1);
+    // Orange grease halo rendered out of pepperoni into the surrounding cheese
+    if (t.type === 'pep' && cook > 0) {
+      g.fillStyle = `rgba(222,112,30,${(0.3 * cook).toFixed(3)})`;
+      g.beginPath();
+      g.ellipse(0, 0, s * 1.28, s * 1.22, 0, 0, TAU);
+      g.fill();
+    }
+
+    // Soft drop shadow that follows each topping's own silhouette (cleared after its first fill)
+    g.shadowColor = 'rgba(40,20,8,.32)';
+    g.shadowBlur = 3;
+    g.shadowOffsetX = 1.5;
+    g.shadowOffsetY = 2.5;
+    const endShadow = () => {
+      g.shadowColor = 'transparent';
+    };
 
     if (t.type === 'pep') {
       g.beginPath();
       g.arc(0, 0, s, 0, TAU);
-      g.fillStyle = '#C4402F';
+      g.fillStyle = mixHex('#C4402F', '#A8301F', cook);
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -992,15 +1168,21 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.arc(0, 0, s * 0.78, 0, TAU);
       g.stroke();
 
-      if (d > 0.35) {
-        g.strokeStyle = 'rgba(90,20,10,.6)';
-        g.lineWidth = s * 0.1;
+      if (cook > 0) {
+        // Cupped, crisped edge
+        g.strokeStyle = `rgba(90,20,10,${(0.65 * cook).toFixed(3)})`;
+        g.lineWidth = s * 0.14;
         g.beginPath();
-        g.arc(0, 0, s * 0.94, 0, TAU);
+        g.arc(0, 0, s * 0.92, 0, TAU);
         g.stroke();
-        g.fillStyle = 'rgba(255,230,160,.5)';
+        // Little pool of oil in the cup, with a glint
+        g.fillStyle = `rgba(236,122,38,${(0.55 * cook).toFixed(3)})`;
         g.beginPath();
-        g.arc(-s * 0.3, -s * 0.35, s * 0.12, 0, TAU);
+        g.ellipse(s * 0.08, s * 0.1, s * 0.42, s * 0.34, 0.4, 0, TAU);
+        g.fill();
+        g.fillStyle = `rgba(255,248,225,${(0.85 * cook).toFixed(3)})`;
+        g.beginPath();
+        g.ellipse(-s * 0.32, -s * 0.36, s * 0.16, s * 0.09, -0.6, 0, TAU);
         g.fill();
       }
     } else if (t.type === 'prosc') {
@@ -1012,6 +1194,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.closePath();
       g.fillStyle = '#E6907E';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -1036,6 +1219,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.closePath();
       g.fillStyle = '#F0E4CE';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -1058,6 +1242,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.arc(0, 0, s, 0, TAU);
       g.fillStyle = '#4F7A38';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -1083,6 +1268,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.closePath();
       g.fillStyle = '#57863F';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -1110,6 +1296,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.closePath();
       g.fillStyle = '#E4BA81';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -1139,6 +1326,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.closePath();
       g.fillStyle = '#C47E5A';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.6;
       g.stroke();
@@ -1154,6 +1342,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.arc(0, 0, s, 0, TAU);
       g.fillStyle = '#3B2C26';
       g.fill();
+      endShadow();
       g.strokeStyle = INK;
       g.lineWidth = 1.8;
       g.stroke();
@@ -1171,6 +1360,31 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.beginPath();
       g.arc(0, 0, s * 0.72, -2.4, -1.2);
       g.stroke();
+    }
+
+    // Molten cheese oozing over the edges so toppings sit *in* the pizza (fresh basil stays on top)
+    if (melt > 0 && t.type !== 'basil') {
+      const look = eng.cheeseLook;
+      g.globalAlpha = melt;
+      const n = 2 + (jitter > 0.5 ? 1 : 0);
+      for (let i = 0; i < n; i++) {
+        const a = t.rot * 2.3 + i * 2.2 + jitter;
+        const ox = Math.cos(a) * s * 0.9;
+        const oy = Math.sin(a) * s * 0.9;
+        const r = s * (0.26 + 0.08 * Math.sin(a * 3.1));
+        g.beginPath();
+        g.ellipse(ox, oy, r * 1.25, r * 0.85, a + Math.PI / 2, 0, TAU);
+        g.fillStyle = look.body;
+        g.fill();
+        g.strokeStyle = look.edge;
+        g.lineWidth = 1.2;
+        g.stroke();
+        g.fillStyle = 'rgba(255,253,240,.8)';
+        g.beginPath();
+        g.arc(ox - r * 0.3, oy - r * 0.25, r * 0.22, 0, TAU);
+        g.fill();
+      }
+      g.globalAlpha = 1;
     }
     g.restore();
   };
@@ -1204,48 +1418,50 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
       g.restore();
     }
 
+    // Re-render the cheese as it melts and browns in the oven
+    const meltKey = Math.round(clamp(d, 0, 1.2) * 25);
+    if (meltKey !== eng.cheeseMeltKey) {
+      eng.cheeseMeltKey = meltKey;
+      repaintCheese();
+    }
+
     if (eng.cheese.length) {
       g.save();
       drawOrganicPath(g, px, py, eng.R * inn, 0.042);
       g.clip();
       g.drawImage(offscreenRef.current.cheeseC, ox, oy, eng.W, eng.H);
-      const units = optionsRef.current.state.cheeseUnits || 1;
-      if (units > 1 || optionsRef.current.state.extraCheese) {
-        const extraLayers = Math.max(1, units - 1);
-        const intensity = Math.min(0.46, 0.14 + (extraLayers - 1) * 0.035);
-        g.fillStyle = `rgba(250, 218, 122, ${intensity.toFixed(3)})`;
-        drawOrganicPath(g, px, py, eng.R * inn * 0.98, 0.042);
-        g.fill();
-      }
-      if (d > 0.3) {
-        const bakeIntensity = (
-          0.12 *
-          Math.min(1, (d - 0.3) / 0.3) *
-          (1 + (units - 1) * 0.06)
-        ).toFixed(3);
-        g.fillStyle = `rgba(255,240,190,${bakeIntensity})`;
-        drawOrganicPath(g, px, py, eng.R * inn * 0.97, 0.042);
-        g.fill();
-      }
       g.restore();
     }
 
-    if (eng.toastSpots.length) {
-      g.fillStyle = 'rgba(122,70,25,0.5)';
+    // Golden-brown blistered spots where cheese bubbles popped in the oven
+    for (const t of eng.toastSpots) {
+      const rr = t.r * eng.R * inn * 2.4;
+      const x = px + t.x * eng.R * inn;
+      const y = py + t.y * eng.R * inn;
+      const grad = g.createRadialGradient(x, y, 0, x, y, rr);
+      grad.addColorStop(0, 'rgba(160,78,20,0.55)');
+      grad.addColorStop(0.5, 'rgba(204,120,38,0.35)');
+      grad.addColorStop(1, 'rgba(214,140,50,0)');
+      g.fillStyle = grad;
       g.beginPath();
-      for (const t of eng.toastSpots) {
-        const rr = t.r * eng.R * inn;
-        const x = px + t.x * eng.R * inn;
-        const y = py + t.y * eng.R * inn;
-        g.moveTo(x + rr, y);
-        g.arc(x, y, rr, 0, TAU);
-      }
+      g.arc(x, y, rr, 0, TAU);
       g.fill();
     }
 
     for (const m of eng.mirror) {
       drawTopping(g, m, px + m.x * eng.R * inn, py + m.y * eng.R * inn, d);
     }
+  };
+
+  /** Soft contact shadow so the pizza sits on the board instead of blending into it */
+  const drawPizzaShadow = (ctx: CanvasRenderingContext2D, px: number, py: number) => {
+    const eng = engineRef.current;
+    ctx.fillStyle = 'rgba(40,20,6,0.16)';
+    drawOrganicPath(ctx, px + 5, py + 10, eng.R * 1.03, 0.048);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(40,20,6,0.2)';
+    drawOrganicPath(ctx, px + 2, py + 5, eng.R * 1.005, 0.048);
+    ctx.fill();
   };
 
   const drawPizzaFull = (ctx: CanvasRenderingContext2D, px: number, py: number) => {
@@ -1524,6 +1740,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     ctx.save();
     const units = optionsRef.current.state.cheeseUnits || 1;
     const extraWidth = Math.min(2.8, (units - 1) * 0.35);
+    const look = eng.cheeseLook;
 
     // Multi-point cheese pull anchors:
     // Left flank bridge: stretching across the left gap between hero flank & main body
@@ -1608,43 +1825,60 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     }
 
     for (const st of cheesePullStrands) {
+      // Gooey strands: thick where they leave the cheese, stretched thin and sagging in the middle
+      const w = st.w * 1.6;
       const cpx = (st.p1.x + st.p2.x) * 0.5 + st.sagX + Math.sin(eng.time * 2.2 + st.phase) * 1.2;
-      const cpy = (st.p1.y + st.p2.y) * 0.5 + st.sagY + Math.cos(eng.time * 2.2 + st.phase) * 1.0;
+      const cpy =
+        (st.p1.y + st.p2.y) * 0.5 + st.sagY * 1.6 + Math.cos(eng.time * 2.2 + st.phase) * 1.0;
+      const STEPS = 40;
+      const strand: { x: number; y: number; r: number }[] = [];
+      for (let i = 0; i <= STEPS; i++) {
+        const t = i / STEPS;
+        const u = 1 - t;
+        const taper = 0.32 + 0.68 * Math.pow(Math.abs(2 * t - 1), 1.6);
+        strand.push({
+          x: u * u * st.p1.x + 2 * u * t * cpx + t * t * st.p2.x,
+          y: u * u * st.p1.y + 2 * u * t * cpy + t * t * st.p2.y,
+          r: (w * taper) / 2
+        });
+      }
+      ctx.fillStyle = rgbaHex(look.edge, 0.7);
+      ctx.beginPath();
+      for (const q of strand) {
+        ctx.moveTo(q.x + q.r + 0.9, q.y);
+        ctx.arc(q.x, q.y, q.r + 0.9, 0, TAU);
+      }
+      ctx.fill();
+      ctx.fillStyle = look.body;
+      ctx.beginPath();
+      for (const q of strand) {
+        ctx.moveTo(q.x + q.r, q.y);
+        ctx.arc(q.x, q.y, q.r, 0, TAU);
+      }
+      ctx.fill();
 
-      // Outer warm golden cheese halo
-      ctx.strokeStyle = 'rgba(235, 175, 65, 0.45)';
-      ctx.lineWidth = st.w + 1.8;
+      // Glossy highlight along the strand
+      ctx.strokeStyle = 'rgba(255, 255, 245, 0.85)';
+      ctx.lineWidth = Math.max(0.8, w * 0.16);
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(st.p1.x, st.p1.y);
-      ctx.quadraticCurveTo(cpx, cpy, st.p2.x, st.p2.y);
-      ctx.stroke();
-
-      // Melted rich mozzarella core
-      ctx.strokeStyle = 'rgba(255, 238, 175, 0.95)';
-      ctx.lineWidth = st.w;
-      ctx.beginPath();
-      ctx.moveTo(st.p1.x, st.p1.y);
-      ctx.quadraticCurveTo(cpx, cpy, st.p2.x, st.p2.y);
-      ctx.stroke();
-
-      // Creamy glossy highlight ribbon
-      ctx.strokeStyle = 'rgba(255, 255, 245, 0.92)';
-      ctx.lineWidth = Math.max(0.9, st.w * 0.42);
-      ctx.beginPath();
-      ctx.moveTo(st.p1.x, st.p1.y);
-      ctx.quadraticCurveTo(cpx, cpy, st.p2.x, st.p2.y);
+      for (let i = 2; i <= STEPS - 2; i++) {
+        const q = strand[i];
+        if (i === 2) ctx.moveTo(q.x - q.r * 0.4, q.y - q.r * 0.4);
+        else ctx.lineTo(q.x - q.r * 0.4, q.y - q.r * 0.4);
+      }
       ctx.stroke();
 
       // Molten cheese droplet suspended mid-stretch
       if (st.hasBead) {
-        ctx.fillStyle = '#FFF8DC';
+        // Drip hanging from the lowest point of the strand
+        const mid = strand[STEPS / 2];
+        ctx.fillStyle = look.body;
+        ctx.strokeStyle = rgbaHex(look.edge, 0.7);
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(cpx, cpy, st.w * 0.55, 0, TAU);
+        ctx.ellipse(mid.x, mid.y + mid.r + w * 0.25, w * 0.22, w * 0.34, 0, 0, TAU);
         ctx.fill();
-
-        ctx.strokeStyle = 'rgba(225, 160, 50, 0.4)';
-        ctx.lineWidth = 0.8;
         ctx.stroke();
       }
     }
@@ -2350,6 +2584,7 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
     eng.pizzaOffX = 0;
     eng.carried = null;
     eng.baseKey = '';
+    eng.cheeseMeltKey = -1;
     eng.boardW = -1;
     eng.boardH = -1;
     eng.sauceDirty = true;
@@ -3017,8 +3252,10 @@ export function usePizzaEngine(options: UsePizzaEngineOptions) {
           if (currentStage === 'base' || currentStage === 'start') {
             drawDoughStage(ctx);
           } else if (currentStage === 'review') {
+            drawPizzaShadow(ctx, eng.cx, eng.cy);
             drawReviewSeparatedSlices(ctx, eng.cx, eng.cy);
           } else {
+            drawPizzaShadow(ctx, eng.cx, eng.cy);
             drawPizzaFull(ctx, eng.cx, eng.cy);
             if (currentStage === 'top') drawZoneOverlay(ctx);
           }

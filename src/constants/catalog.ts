@@ -180,10 +180,10 @@ export const CHEESE_C = [
 
 export const CRUST_COLOR_STOPS: [number, string][] = [
   [0, '#F0DFB8'],
-  [0.5, '#E7C489'],
-  [0.72, '#D19755'],
-  [0.88, '#A05C2C'],
-  [1.05, '#57301A'],
+  [0.5, '#E9C07E'],
+  [0.72, '#DC9E4C'],
+  [0.88, '#BC7330'],
+  [1.05, '#6E3A18'],
   [1.2, '#26140B']
 ];
 
